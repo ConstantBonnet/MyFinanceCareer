@@ -8,7 +8,7 @@ My Finance Career est un espace de pilotage pour etudiants en finance. L'applica
 
 - Tableau de bord en premiere page avec candidatures en cours, objectifs, to-do, rappels et statistiques.
 - Pipeline de candidatures avec focus list, filtres et mise a jour rapide.
-- Agenda avec deadlines, entretiens, tests, relances et marquage termine.
+- Agenda en calendrier mensuel avec deadlines, entretiens, tests, relances de candidatures, rappels reseau et ajout d'evenements.
 - Reseau professionnel avec contacts classes par metier, suivi des relances, statut, canal et priorite.
 - Import Excel/CSV d'une fiche de networking existante vers la bibliotheque de contacts.
 - Bibliotheque de ressources par usage et domaine.

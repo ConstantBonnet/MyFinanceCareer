@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import calendar
 import html
 import sqlite3
 import unicodedata
@@ -70,6 +71,22 @@ NETWORK_CHANNELS = ["LinkedIn", "Email", "Call", "Coffee chat", "Event", "Alumni
 SENIORITY_LEVELS = ["Student", "Intern", "Analyst", "Associate", "Manager", "VP", "Director", "Partner", "Recruiter", "Other"]
 TABLES = ["applications", "resources", "events", "goals", "contacts"]
 PAGES = ["Accueil", "Pipeline", "Agenda", "Reseau", "Ressources", "Objectifs", "Analyse", "Donnees"]
+MONTH_NAMES = [
+    "",
+    "Janvier",
+    "Fevrier",
+    "Mars",
+    "Avril",
+    "Mai",
+    "Juin",
+    "Juillet",
+    "Aout",
+    "Septembre",
+    "Octobre",
+    "Novembre",
+    "Decembre",
+]
+WEEKDAY_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"]
 
 
 def connect() -> sqlite3.Connection:
@@ -588,38 +605,40 @@ def setup_page() -> None:
         div[role="radiogroup"] {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin: 0 0 26px;
-            padding: 10px;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(185,201,193,.72);
-            border-radius: 14px;
-            box-shadow: 0 12px 28px rgba(20,24,23,.055);
+            gap: 18px;
+            margin: 0 0 28px;
+            padding: 0 0 10px;
+            background: transparent;
+            border-bottom: 1px solid rgba(20,24,23,.13);
+            border-radius: 0;
+            box-shadow: none;
             position: sticky;
-            top: 8px;
+            top: 0;
             z-index: 999;
-            backdrop-filter: blur(16px);
+            backdrop-filter: blur(14px);
         }
         div[role="radiogroup"] label {
-            min-height: 38px;
+            min-height: 30px;
             border: 1px solid transparent;
-            border-radius: 999px;
-            background: transparent;
-            padding: 8px 14px;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            background: rgba(245,247,244,.72);
+            padding: 6px 2px 8px;
             box-shadow: none;
         }
         div[role="radiogroup"] label p {
-            color: var(--ink) !important;
+            color: var(--muted) !important;
             font-weight: 720 !important;
+            font-size: .88rem !important;
         }
         div[role="radiogroup"] label:has(input:checked) {
-            border-color: rgba(18,184,134,.72);
-            background: #0f2b25;
-            color: #f5fffb;
-            box-shadow: 0 10px 20px rgba(5,115,95,.12);
+            border-color: transparent transparent var(--emerald-dark);
+            background: transparent;
+            color: var(--ink);
+            box-shadow: none;
         }
         div[role="radiogroup"] label:has(input:checked) p {
-            color: #f5fffb !important;
+            color: var(--ink) !important;
         }
         div[role="radiogroup"] label > div:first-child {
             display: none;
@@ -652,12 +671,17 @@ def setup_page() -> None:
             background: linear-gradient(180deg, #101817 0%, #162622 100%);
             color: #effff9;
             border-radius: 8px;
-            padding: 19px;
-            min-height: 260px;
-            box-shadow: 0 20px 50px rgba(5,40,34,.18);
+            padding: 14px;
+            min-height: 0;
+            box-shadow: 0 12px 28px rgba(5,40,34,.14);
+        }
+        .focus-panel h2 {
+            font-size: 1.05rem;
+            margin-bottom: .25rem;
         }
         .focus-panel .muted {
             color: rgba(239,255,249,.72);
+            font-size: .82rem;
         }
         .dashboard-band {
             display: grid;
@@ -856,7 +880,7 @@ def setup_page() -> None:
             grid-template-columns: minmax(0, 1fr) auto;
             gap: 12px;
             border-bottom: 1px solid rgba(255,255,255,.1);
-            padding: 10px 0;
+            padding: 7px 0;
         }
         .brief-row:last-child {
             border-bottom: 0;
@@ -870,6 +894,70 @@ def setup_page() -> None:
             font-size: .78rem;
             color: #9ff5dd;
             white-space: nowrap;
+        }
+        .calendar-shell {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(255,255,255,.88);
+            box-shadow: 0 12px 26px rgba(20,24,23,.045);
+        }
+        .calendar-head,
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+        }
+        .calendar-head div {
+            padding: 10px;
+            border-right: 1px solid var(--line);
+            background: #f7fbf8;
+            color: var(--muted);
+            font-size: .76rem;
+            font-weight: 830;
+            text-transform: uppercase;
+        }
+        .calendar-head div:last-child {
+            border-right: 0;
+        }
+        .calendar-day {
+            min-height: 132px;
+            border-top: 1px solid var(--line);
+            border-right: 1px solid var(--line);
+            padding: 9px;
+            background: #fff;
+        }
+        .calendar-day:nth-child(7n) {
+            border-right: 0;
+        }
+        .calendar-muted {
+            background: #f6f8f6;
+            color: #a0aaa6;
+        }
+        .calendar-today {
+            box-shadow: inset 0 0 0 2px rgba(18,184,134,.55);
+        }
+        .calendar-number {
+            font-weight: 830;
+            font-size: .86rem;
+            margin-bottom: 7px;
+        }
+        .calendar-event {
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--emerald-dark);
+            border-radius: 6px;
+            padding: 5px 6px;
+            margin-bottom: 5px;
+            background: #f7fbf8;
+            font-size: .75rem;
+            line-height: 1.25;
+        }
+        .calendar-event-hot {
+            border-left-color: var(--red);
+            background: #fff7f6;
+        }
+        .calendar-event-done {
+            opacity: .55;
+            text-decoration: line-through;
         }
         div[data-testid="stExpander"] {
             border: 1px solid var(--line);
@@ -1091,7 +1179,7 @@ def brief_panel(apps: pd.DataFrame, events: pd.DataFrame, contacts: pd.DataFrame
             <div class="brief-date">{escape(timing)}</div>
         </div>
         """
-        for kind, label, timing in rows[:6]
+        for kind, label, timing in rows[:3]
     )
     st.markdown(
         f"""
@@ -1220,6 +1308,124 @@ def render_stats_strip(apps: pd.DataFrame, events: pd.DataFrame, contacts: pd.Da
     )
 
 
+def next_month(month_start: date, offset: int) -> date:
+    month = month_start.month - 1 + offset
+    year = month_start.year + month // 12
+    month = month % 12 + 1
+    return date(year, month, 1)
+
+
+def agenda_items(events: pd.DataFrame, apps: pd.DataFrame, contacts: pd.DataFrame) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    if not events.empty:
+        for _, row in events.iterrows():
+            parsed = parse_day(row["event_date"])
+            if parsed:
+                rows.append(
+                    {
+                        "day": parsed,
+                        "title": row["title"],
+                        "kind": row["event_type"],
+                        "priority": row["priority"],
+                        "notes": row["notes"] or row["related_company"] or "",
+                        "done": bool(row["done"]),
+                        "source": "Agenda",
+                    }
+                )
+    if not apps.empty:
+        for _, row in apps[apps["status"] != "Cloturee"].iterrows():
+            deadline = parse_day(row["deadline"])
+            follow = parse_day(row["follow_up_date"])
+            if deadline:
+                rows.append(
+                    {
+                        "day": deadline,
+                        "title": f"{row['company']} - deadline",
+                        "kind": "Deadline",
+                        "priority": row["priority"],
+                        "notes": row["role"],
+                        "done": False,
+                        "source": "Pipeline",
+                    }
+                )
+            if follow:
+                rows.append(
+                    {
+                        "day": follow,
+                        "title": f"{row['company']} - relance",
+                        "kind": "Relance",
+                        "priority": row["priority"],
+                        "notes": row["next_action"] or row["role"],
+                        "done": False,
+                        "source": "Pipeline",
+                    }
+                )
+    if not contacts.empty:
+        active_contacts = contacts[contacts["status"] != "Dormant"] if "status" in contacts.columns else contacts
+        for _, row in active_contacts.iterrows():
+            follow = parse_day(row["next_follow_up"])
+            if follow:
+                rows.append(
+                    {
+                        "day": follow,
+                        "title": f"{row['name']} - relance",
+                        "kind": "Reseau",
+                        "priority": row.get("priority", "Moyenne"),
+                        "notes": row["company"] or row.get("profession_group", ""),
+                        "done": False,
+                        "source": "Reseau",
+                    }
+                )
+    return sorted(rows, key=lambda item: (item["day"], PRIORITY_WEIGHT.get(item["priority"], 2)), reverse=False)
+
+
+def render_calendar(month_start: date, items: list[dict[str, Any]]) -> None:
+    by_day: dict[date, list[dict[str, Any]]] = {}
+    for item in items:
+        by_day.setdefault(item["day"], []).append(item)
+    cal = calendar.Calendar(firstweekday=0)
+    weeks = cal.monthdatescalendar(month_start.year, month_start.month)
+    header = "".join(f"<div>{escape(day)}</div>" for day in WEEKDAY_LABELS)
+    cells = []
+    for week in weeks:
+        for day in week:
+            classes = ["calendar-day"]
+            if day.month != month_start.month:
+                classes.append("calendar-muted")
+            if day == date.today():
+                classes.append("calendar-today")
+            day_items = by_day.get(day, [])
+            events_html = ""
+            for item in day_items[:3]:
+                event_classes = ["calendar-event"]
+                if item["priority"] == "Haute" or item["day"] <= date.today():
+                    event_classes.append("calendar-event-hot")
+                if item["done"]:
+                    event_classes.append("calendar-event-done")
+                events_html += (
+                    f'<div class="{" ".join(event_classes)}">'
+                    f'<strong>{escape(item["kind"])}</strong><br>{escape(item["title"])}'
+                    f'</div>'
+                )
+            if len(day_items) > 3:
+                events_html += f'<div class="todo-sub">+{len(day_items) - 3} autre(s)</div>'
+            cells.append(
+                f'<div class="{" ".join(classes)}">'
+                f'<div class="calendar-number">{day.day}</div>'
+                f'{events_html}'
+                f'</div>'
+            )
+    st.markdown(
+        f"""
+        <div class="calendar-shell">
+            <div class="calendar-head">{header}</div>
+            <div class="calendar-grid">{"".join(cells)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def application_form(prefix: str = "application") -> None:
     with st.form(f"{prefix}_form", clear_on_submit=True):
         left, right = st.columns(2)
@@ -1323,15 +1529,11 @@ def home_page() -> None:
     upcoming_events = events[(events["done"] == 0) & (events["days_left"] >= 0) & (events["days_left"] <= 14)] if not events.empty else events
     conversion = f"{interviews / max(len(sent_base), 1):.0%}" if not active_apps.empty else "0%"
 
-    left, right = st.columns([1.35, .75])
-    with left:
-        page_intro(
-            "Tableau de bord",
-            "La premiere vue pour savoir ou tu en es: candidatures en cours, objectifs, to-do, rappels et statistiques utiles.",
-            "My Finance Career",
-        )
-    with right:
-        brief_panel(active_apps, events, contacts)
+    page_intro(
+        "Tableau de bord",
+        "La premiere vue pour savoir ou tu en es: candidatures en cours, objectifs, to-do, rappels et statistiques utiles.",
+        "My Finance Career",
+    )
 
     st.markdown('<div class="metric-grid">', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
@@ -1449,28 +1651,61 @@ def pipeline_page() -> None:
 
 
 def agenda_page() -> None:
-    page_intro("Agenda", "Voir les deadlines, entretiens, tests et relances sans fouiller dans tout le pipeline.", "Planning")
+    page_intro("Agenda", "Un calendrier mensuel pour voir les deadlines, entretiens, tests, relances et evenements reseau.", "Planning")
+    events, apps, contacts = events_df(), applications_df(), contacts_df()
+    items = agenda_items(events, apps, contacts)
+    if "agenda_month" not in st.session_state:
+        st.session_state["agenda_month"] = date.today().replace(day=1)
+    month_start = st.session_state["agenda_month"]
+
+    prev_col, title_col, next_col, today_col = st.columns([.75, 1.8, .75, .9])
+    if prev_col.button("Mois precedent", width="stretch"):
+        st.session_state["agenda_month"] = next_month(month_start, -1)
+        st.rerun()
+    title_col.markdown(f"### {MONTH_NAMES[month_start.month]} {month_start.year}")
+    if next_col.button("Mois suivant", width="stretch"):
+        st.session_state["agenda_month"] = next_month(month_start, 1)
+        st.rerun()
+    if today_col.button("Aujourd'hui", width="stretch"):
+        st.session_state["agenda_month"] = date.today().replace(day=1)
+        st.rerun()
+
     with st.expander("Ajouter un evenement", expanded=False):
         event_form("main_event")
-    events = events_df()
-    if events.empty:
-        st.info("Aucun evenement planifie.")
-        return
 
-    overdue = events[(events["done"] == 0) & (events["days_left"] < 0)]
-    upcoming = events[(events["done"] == 0) & (events["days_left"] >= 0)]
-    done = events[events["done"] == 1]
-    col1, col2, col3 = st.columns(3)
+    overdue = [item for item in items if not item["done"] and item["day"] < date.today()]
+    month_items = [item for item in items if item["day"].year == month_start.year and item["day"].month == month_start.month]
+    upcoming = [item for item in items if not item["done"] and item["day"] >= date.today()]
+    done = [item for item in items if item["done"]]
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         metric_card("En retard", len(overdue), "a replanifier")
     with col2:
-        metric_card("A venir", len(upcoming), "non termines")
+        metric_card("Ce mois-ci", len(month_items), "elements au calendrier")
     with col3:
+        metric_card("A venir", len(upcoming), "non termines")
+    with col4:
         metric_card("Termines", len(done), "archives dans l'agenda")
 
-    section_label("Prochains jalons")
-    for _, row in upcoming.head(8).iterrows():
-        item_card(row["title"], row["notes"] or row["related_company"] or "", [row["event_type"], format_day(row["event_date"]), row["priority"]])
+    section_label("Calendrier")
+    if not items:
+        st.info("Aucun element date pour le moment. Ajoute un evenement, une candidature ou une relance reseau.")
+    render_calendar(month_start, items)
+
+    left, right = st.columns([1.1, .9])
+    with left:
+        section_label("Prochains jalons")
+        for item in upcoming[:8]:
+            item_card(item["title"], item["notes"], [item["kind"], format_day(item["day"]), item["priority"], item["source"]], hot=item["day"] <= date.today() + timedelta(days=3))
+        if not upcoming:
+            st.caption("Aucun jalon a venir.")
+    with right:
+        section_label("Evenements ajoutes")
+        manual_events = events[events["done"] == 0].head(8) if not events.empty else events
+        if manual_events.empty:
+            st.caption("Aucun evenement manuel actif.")
+        for _, row in manual_events.iterrows():
+            item_card(row["title"], row["notes"] or row["related_company"] or "", [row["event_type"], format_day(row["event_date"]), row["priority"]])
 
     with st.expander("Marquer un evenement comme termine"):
         options = {f"{row['event_date']} - {row['title']}": int(row["id"]) for _, row in events[events["done"] == 0].iterrows()}
