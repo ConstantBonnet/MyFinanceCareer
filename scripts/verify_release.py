@@ -79,7 +79,9 @@ def main() -> None:
     check(app.PAGES == REQUIRED_PAGES, "navigation is limited to the four core pages")
     check(app.LOGO_PATH.name == "logo_mark.png", "transparent logo mark is used in the header")
     app_source = read("app.py")
-    check("on_change=sync_page_nav" in app_source, "navigation menu is wired to page changes")
+    check('st.selectbox("Menu"' not in app_source, "dropdown navigation is removed from the header")
+    check("sync_page_nav" not in app_source, "old dropdown navigation callback is removed")
+    check('key=f"nav_{page_key}"' in app_source, "header navigation uses direct page buttons")
     check("nav-form" not in app_source and "nav-menu" not in app_source, "abandoned HTML navigation is removed")
 
     print("Release verification passed.")

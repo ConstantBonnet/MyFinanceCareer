@@ -51,6 +51,12 @@ NETWORK_CHANNELS = ["LinkedIn", "Email", "Call", "Coffee chat", "Event", "Alumni
 SENIORITY_LEVELS = ["Student", "Intern", "Analyst", "Associate", "Manager", "VP", "Director", "Partner", "Recruiter", "Other"]
 TABLES = ["resources", "events", "goals", "contacts"]
 PAGES = ["Objectifs", "Calendrier", "Bibliotheque", "Reseau"]
+NAV_LABELS = {
+    "Objectifs": "Objectifs",
+    "Calendrier": "Calendrier",
+    "Bibliotheque": "Bibliotheque",
+    "Reseau": "Reseau",
+}
 MONTH_NAMES = [
     "",
     "Janvier",
@@ -475,27 +481,27 @@ def setup_page() -> None:
             font-size: 1.05rem;
             margin: 0 0 .55rem;
         }
-        .appbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            min-height: 42px;
-            padding: 2px 0 4px;
-            margin-bottom: 0;
+        div.st-key-app_topbar {
+            padding: 6px 0 8px;
             position: sticky;
             top: 0;
             z-index: 999;
             background: rgba(239,249,244,.88);
             backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(16,24,23,.12);
+            margin-bottom: 2px;
+        }
+        div.st-key-app_topbar [data-testid="stHorizontalBlock"] {
+            align-items: center;
         }
         .appbar-brand {
             display: flex;
             align-items: center;
             gap: 10px;
+            min-width: 0;
         }
         .appbar-brand img {
-            width: 52px;
+            width: 60px;
             height: 36px;
             object-fit: contain;
             border-radius: 0;
@@ -507,6 +513,12 @@ def setup_page() -> None:
             font-weight: 820;
             color: var(--ink);
         }
+        div.st-key-app_topbar div.stButton > button {
+            min-height: 38px;
+            padding: 0 12px !important;
+            white-space: nowrap;
+            border-radius: 8px !important;
+        }
         div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
             border-radius: 8px !important;
             border-color: var(--line-strong) !important;
@@ -516,11 +528,6 @@ def setup_page() -> None:
         div[data-testid="stSelectbox"] {
             margin-top: 0 !important;
             margin-bottom: 0 !important;
-        }
-        .appbar-rule {
-            height: 1px;
-            background: rgba(16,24,23,.12);
-            margin: 0 0 2px;
         }
         .hero-grid {
             display: grid;
@@ -869,7 +876,7 @@ def setup_page() -> None:
             .block-container {
                 padding: .75rem .85rem 1.8rem;
             }
-            .appbar {
+            div.st-key-app_topbar {
                 position: static;
             }
             .hero-grid {
@@ -909,7 +916,7 @@ def setup_page() -> None:
                 min-width: 0;
             }
             .appbar-brand img {
-                width: 46px;
+                width: 52px;
                 height: 32px;
             }
         }
@@ -919,8 +926,9 @@ def setup_page() -> None:
     )
 
 
-def sync_page_nav() -> None:
-    st.query_params["page"] = st.session_state["page_nav"]
+def set_current_page(page: str) -> None:
+    st.session_state["current_page"] = page
+    st.query_params["page"] = page
 
 
 def render_header() -> str:
@@ -931,30 +939,37 @@ def render_header() -> str:
         requested_page = PAGES[0]
         st.query_params["page"] = requested_page
 
-    if "page_nav" not in st.session_state or st.session_state["page_nav"] not in PAGES or st.session_state.get("_url_page") != requested_page:
-        st.session_state["page_nav"] = requested_page
+    if "current_page" not in st.session_state or st.session_state["current_page"] not in PAGES or st.session_state.get("_url_page") != requested_page:
+        st.session_state["current_page"] = requested_page
         st.session_state["_url_page"] = requested_page
 
-    left, right = st.columns([.72, .28], vertical_alignment="center")
-    with left:
-        st.markdown(
-            f"""
-            <div class="appbar">
+    current_page = st.session_state["current_page"]
+    with st.container(key="app_topbar"):
+        brand_col, nav_col = st.columns([.34, .66], vertical_alignment="center")
+        with brand_col:
+            st.markdown(
+                f"""
                 <div class="appbar-brand">
                     {logo_html}
                     <div class="appbar-title">My Finance Career</div>
                 </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with right:
-        page = st.selectbox("Menu", PAGES, index=PAGES.index(requested_page), key="page_nav", label_visibility="collapsed", on_change=sync_page_nav)
-    st.markdown('<div class="appbar-rule"></div>', unsafe_allow_html=True)
-    if st.query_params.get("page") != page:
-        st.query_params["page"] = page
-        st.session_state["_url_page"] = page
-    return page
+                """,
+                unsafe_allow_html=True,
+            )
+        with nav_col:
+            nav_cols = st.columns(len(PAGES), gap="small", vertical_alignment="center")
+            for index, page_key in enumerate(PAGES):
+                with nav_cols[index]:
+                    if st.button(
+                        NAV_LABELS[page_key],
+                        key=f"nav_{page_key}",
+                        type="primary" if page_key == current_page else "secondary",
+                        use_container_width=True,
+                    ):
+                        set_current_page(page_key)
+                        st.rerun()
+
+    return st.session_state["current_page"]
 
 
 def page_intro(title: str, subtitle: str, eyebrow: str) -> None:
