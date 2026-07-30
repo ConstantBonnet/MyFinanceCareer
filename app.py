@@ -461,9 +461,12 @@ def setup_page() -> None:
         #MainMenu, footer, div[data-testid="stToolbar"], div[data-testid="stDecoration"] {
             visibility: hidden !important;
             height: 0 !important;
+            pointer-events: none !important;
         }
         header[data-testid="stHeader"] {
             background: transparent;
+            height: 0 !important;
+            pointer-events: none !important;
         }
         h1, h2, h3, p {
             letter-spacing: 0;
@@ -483,14 +486,15 @@ def setup_page() -> None:
             margin: 0 0 .55rem;
         }
         div.st-key-app_topbar {
-            padding: 6px 0 8px;
+            padding: 8px 0 10px;
             position: sticky;
             top: 0;
-            z-index: 999;
+            z-index: 100000;
             background: rgba(239,249,244,.88);
             backdrop-filter: blur(14px);
             border-bottom: 1px solid rgba(16,24,23,.12);
             margin-bottom: 2px;
+            isolation: isolate;
         }
         .appbar {
             display: flex;
@@ -529,6 +533,8 @@ def setup_page() -> None:
             min-width: 0;
             overflow-x: auto;
             scrollbar-width: none;
+            position: relative;
+            z-index: 2;
         }
         .topnav-links::-webkit-scrollbar {
             display: none;
@@ -537,7 +543,7 @@ def setup_page() -> None:
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 38px;
+            height: 44px;
             padding: 0 14px;
             white-space: nowrap;
             border-radius: 8px;
@@ -550,15 +556,18 @@ def setup_page() -> None:
             position: relative;
             box-sizing: border-box;
             flex: 0 0 auto;
-            min-width: 112px;
-            line-height: 38px;
+            min-width: 118px;
+            line-height: 1;
             cursor: pointer;
+            user-select: none;
+            z-index: 3;
         }
         .nav-pill::after {
             content: "";
             position: absolute;
             inset: 0;
             border-radius: inherit;
+            pointer-events: none;
         }
         .nav-pill:hover {
             border-color: var(--emerald-dark);
@@ -1022,9 +1031,9 @@ def setup_page() -> None:
                 justify-content: flex-start;
             }
             .nav-pill {
-                min-width: 96px;
-                min-height: 36px;
-                line-height: 36px;
+                min-width: 102px;
+                height: 40px;
+                line-height: 1;
                 padding: 0 10px;
                 font-size: .84rem;
             }
@@ -1073,8 +1082,8 @@ def setup_page() -> None:
             }
             .nav-pill {
                 min-width: 100px;
-                min-height: 36px;
-                line-height: 36px;
+                height: 40px;
+                line-height: 1;
                 padding: 0 12px;
             }
         }
