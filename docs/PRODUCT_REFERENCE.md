@@ -1,18 +1,18 @@
-# MFC - Reference Produit
+# My Finance Career - Reference Produit
 
 ## Positionnement
 
-MFC est un espace de pilotage pour etudiants en finance. L'application centralise candidatures, ressources, echeances, objectifs et contacts sans remplacer LinkedIn, les plateformes d'emploi ou Google Drive.
+My Finance Career est un espace de pilotage pour etudiants en finance. L'application centralise candidatures, ressources, echeances, objectifs et contacts sans remplacer LinkedIn, les plateformes d'emploi ou Google Drive.
 
 ## Perimetre livre
 
-- Tableau de bord.
-- Candidatures avec Kanban et liste filtrable.
-- Bibliotheque de ressources.
-- Calendrier interne.
-- Objectifs.
-- Contacts professionnels.
-- Statistiques.
+- Accueil decisionnel avec priorites et signaux de traction.
+- Pipeline de candidatures avec focus list, filtres et mise a jour rapide.
+- Agenda avec deadlines, entretiens, tests, relances et marquage termine.
+- Contacts professionnels avec suivi des prochaines relances.
+- Bibliotheque de ressources par usage et domaine.
+- Objectifs avec progression modifiable.
+- Analyse du pipeline.
 - Export CSV.
 
 ## Choix MVP
@@ -29,3 +29,4 @@ MFC est un espace de pilotage pour etudiants en finance. L'application centralis
 3. Gestion par utilisateur.
 4. Exports plus structures.
 5. Integrations externes apres validation de l'usage manuel.
+6. Rappels automatiques et synchronisation calendrier.

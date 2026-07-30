@@ -15,6 +15,7 @@ REQUIRED_FILES = [
     "DEPLOYMENT.md",
     ".streamlit/config.toml",
     "docs/PRODUCT_REFERENCE.md",
+    "static/logo.png",
 ]
 REQUIRED_TABLES = ["applications", "resources", "events", "goals", "contacts"]
 

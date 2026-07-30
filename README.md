@@ -1,17 +1,18 @@
-# MFC - My Finance Career
+# My Finance Career
 
-MFC est une application Streamlit qui aide un etudiant en finance a organiser sa recherche de stages et premiers emplois depuis un espace unique.
+My Finance Career est une application Streamlit qui aide un etudiant en finance a piloter sa recherche de stages et premiers emplois depuis un espace unique, clair et actionnable.
 
 ## Fonctionnalites
 
-- Tableau de bord avec actions prioritaires, echeances et progression.
-- Pipeline de candidatures avec Kanban, liste, filtres et mise a jour.
-- Bibliotheque de liens vers CV, lettres, guides, cours et ressources.
-- Calendrier interne pour deadlines, entretiens, tests, relances et networking.
-- Objectifs avec progression, statut et prochaine etape.
-- Contacts professionnels sous forme de mini-CRM.
-- Statistiques utiles sur le pipeline.
+- Accueil avec priorites du jour, traction, retards et pipeline actif.
+- Pipeline de candidatures avec focus list, filtres, table exploitable et mise a jour rapide.
+- Agenda pour deadlines, entretiens, tests, relances et networking, avec marquage termine.
+- Contacts professionnels sous forme de mini-CRM avec relances replanifiables.
+- Ressources classees par categorie, domaine et tags.
+- Objectifs avec progression et prochaine etape modifiable.
+- Analyse du pipeline par statut, domaine, traction et offres.
 - Export CSV des donnees.
+- Logo et navigation horizontale integres pour une presentation plus proche d'une vraie app.
 
 ## Lancer en local
 
@@ -33,4 +34,4 @@ python scripts/verify_release.py
 - Main file path: `app.py`
 - Secrets: aucun
 
-Cette version utilise SQLite local pour une demo ou un MVP individuel. Pour une version multi-utilisateur, il faudra ajouter une base geree et une authentification.
+Cette version utilise SQLite local pour une demo ou un MVP individuel. Pour une version multi-utilisateur, il faudra ajouter une base geree, une authentification et une separation des donnees par utilisateur.

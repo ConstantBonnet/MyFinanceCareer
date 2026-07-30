@@ -11,7 +11,7 @@
 ## Checklist
 
 1. Verifier le projet avec `python scripts/verify_release.py`.
-2. Verifier que GitHub contient `app.py`, `requirements.txt`, `README.md` et `.streamlit/config.toml`.
+2. Verifier que GitHub contient `app.py`, `requirements.txt`, `README.md`, `static/logo.png` et `.streamlit/config.toml`.
 3. Verifier que GitHub ne contient pas `.DS_Store` ni `mfc_data.sqlite3`.
 4. Deployer depuis Streamlit Community Cloud.
 
