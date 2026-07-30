@@ -423,7 +423,7 @@ def format_day(value: Any) -> str:
 
 
 def escape(value: Any) -> str:
-    return html.escape(str(value or ""))
+    return html.escape("" if value is None else str(value))
 
 
 def days_text(value: Any) -> str:
@@ -554,7 +554,7 @@ def setup_page() -> None:
             gap: 18px;
             padding: 12px 0 14px;
             border-bottom: 1px solid rgba(16,24,23,.12);
-            margin-bottom: 14px;
+            margin-bottom: 10px;
         }
         .brand {
             display: flex;
@@ -589,15 +589,24 @@ def setup_page() -> None:
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin: 8px 0 24px;
+            margin: 0 0 26px;
+            padding: 10px;
+            background: rgba(255,255,255,.72);
+            border: 1px solid rgba(185,201,193,.72);
+            border-radius: 14px;
+            box-shadow: 0 12px 28px rgba(20,24,23,.055);
+            position: sticky;
+            top: 8px;
+            z-index: 999;
+            backdrop-filter: blur(16px);
         }
         div[role="radiogroup"] label {
             min-height: 38px;
-            border: 1px solid var(--line);
+            border: 1px solid transparent;
             border-radius: 999px;
-            background: rgba(255,255,255,.74);
-            padding: 8px 13px;
-            box-shadow: 0 6px 14px rgba(20,24,23,.035);
+            background: transparent;
+            padding: 8px 14px;
+            box-shadow: none;
         }
         div[role="radiogroup"] label p {
             color: var(--ink) !important;
@@ -607,6 +616,7 @@ def setup_page() -> None:
             border-color: rgba(18,184,134,.72);
             background: #0f2b25;
             color: #f5fffb;
+            box-shadow: 0 10px 20px rgba(5,115,95,.12);
         }
         div[role="radiogroup"] label:has(input:checked) p {
             color: #f5fffb !important;
@@ -648,6 +658,95 @@ def setup_page() -> None:
         }
         .focus-panel .muted {
             color: rgba(239,255,249,.72);
+        }
+        .dashboard-band {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+            gap: 18px;
+            align-items: start;
+            margin: 18px 0 4px;
+        }
+        .panel {
+            background: rgba(255,255,255,.88);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 12px 26px rgba(20,24,23,.045);
+        }
+        .todo-row {
+            display: grid;
+            grid-template-columns: 102px minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: start;
+            border-bottom: 1px solid var(--line);
+            padding: 11px 0;
+        }
+        .todo-row:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+        .todo-type {
+            color: var(--emerald-dark);
+            font-size: .74rem;
+            font-weight: 830;
+            text-transform: uppercase;
+        }
+        .todo-main {
+            font-weight: 760;
+            line-height: 1.35;
+        }
+        .todo-sub {
+            color: var(--muted);
+            font-size: .84rem;
+            line-height: 1.35;
+            margin-top: 3px;
+        }
+        .todo-date {
+            color: var(--muted);
+            font-size: .8rem;
+            white-space: nowrap;
+        }
+        .goal-row {
+            margin-bottom: 12px;
+        }
+        .goal-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            font-weight: 760;
+            line-height: 1.35;
+        }
+        .goal-track {
+            height: 9px;
+            border-radius: 999px;
+            background: #e9f0ed;
+            overflow: hidden;
+            margin: 8px 0 5px;
+        }
+        .goal-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--emerald-dark), var(--emerald));
+        }
+        .stat-strip {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .mini-stat {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 12px;
+            background: #fbfdfb;
+        }
+        .mini-stat-value {
+            font-size: 1.35rem;
+            font-weight: 850;
+        }
+        .mini-stat-label {
+            color: var(--muted);
+            font-size: .8rem;
+            margin-top: 2px;
         }
         .metric-grid {
             display: grid;
@@ -820,6 +919,18 @@ def setup_page() -> None:
             .metric-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+            .dashboard-band {
+                grid-template-columns: 1fr;
+            }
+            .stat-strip {
+                grid-template-columns: 1fr;
+            }
+            .todo-row {
+                grid-template-columns: 82px minmax(0, 1fr);
+            }
+            .todo-date {
+                grid-column: 2;
+            }
             .stage-row {
                 grid-template-columns: 102px minmax(0, 1fr) 38px;
             }
@@ -841,7 +952,7 @@ def setup_page() -> None:
             div[role="radiogroup"] {
                 flex-wrap: nowrap;
                 overflow-x: auto;
-                padding-bottom: 6px;
+                padding: 8px;
             }
             div[role="radiogroup"] label {
                 white-space: nowrap;
@@ -996,6 +1107,119 @@ def brief_panel(apps: pd.DataFrame, events: pd.DataFrame, contacts: pd.DataFrame
     )
 
 
+def day_delta(value: Any, fallback: int = 99) -> int:
+    parsed = parse_day(value)
+    return (parsed - date.today()).days if parsed else fallback
+
+
+def dashboard_todos(apps: pd.DataFrame, events: pd.DataFrame, contacts: pd.DataFrame, goals: pd.DataFrame) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    if not apps.empty:
+        for _, row in apps[apps["status"] != "Cloturee"].iterrows():
+            rows.append(
+                {
+                    "kind": "Candidature",
+                    "title": f"{row['company']} - {row['role']}",
+                    "subtitle": row["next_action"] or "Definir la prochaine action",
+                    "date": row["follow_up_date"],
+                    "score": row.get("action_score", 0),
+                }
+            )
+    if not events.empty:
+        for _, row in events[events["done"] == 0].iterrows():
+            rows.append(
+                {
+                    "kind": row["event_type"],
+                    "title": row["title"],
+                    "subtitle": row["related_company"] or row["notes"] or "Agenda",
+                    "date": row["event_date"],
+                    "score": 120 - day_delta(row["event_date"]),
+                }
+            )
+    if not contacts.empty:
+        active_contacts = contacts[contacts["status"] != "Dormant"] if "status" in contacts.columns else contacts
+        for _, row in active_contacts.iterrows():
+            rows.append(
+                {
+                    "kind": "Reseau",
+                    "title": row["name"],
+                    "subtitle": f"{row['company'] or 'Contact'} - {row['status'] or 'A suivre'}",
+                    "date": row["next_follow_up"],
+                    "score": row.get("network_score", 0),
+                }
+            )
+    if not goals.empty:
+        active_goals = goals[goals["status"] != "Termine"]
+        for _, row in active_goals.iterrows():
+            rows.append(
+                {
+                    "kind": "Objectif",
+                    "title": row["title"],
+                    "subtitle": row["next_step"] or "Definir la prochaine etape",
+                    "date": row["due_date"],
+                    "score": 90 - day_delta(row["due_date"]),
+                }
+            )
+    return sorted(rows, key=lambda item: (item["score"], -day_delta(item["date"])), reverse=True)[:8]
+
+
+def render_todo_panel(rows: list[dict[str, Any]]) -> None:
+    if not rows:
+        st.info("Aucune action urgente. Ajoute des candidatures, objectifs ou rappels pour remplir le tableau de bord.")
+        return
+    rows_html = "".join(
+        f'<div class="todo-row">'
+        f'<div class="todo-type">{escape(row["kind"])}</div>'
+        f'<div><div class="todo-main">{escape(row["title"])}</div>'
+        f'<div class="todo-sub">{escape(row["subtitle"])}</div></div>'
+        f'<div class="todo-date">{escape(days_text(row["date"]))}</div>'
+        f'</div>'
+        for row in rows
+    )
+    st.markdown(f'<div class="panel">{rows_html}</div>', unsafe_allow_html=True)
+
+
+def render_goal_panel(goals: pd.DataFrame) -> None:
+    active_goals = goals[goals["status"] != "Termine"].head(5) if not goals.empty else goals
+    if active_goals.empty:
+        st.info("Aucun objectif actif pour le moment.")
+        return
+    rows_html = ""
+    for _, row in active_goals.iterrows():
+        progress = max(0, min(100, int(row["progress"] or 0)))
+        rows_html += (
+            f'<div class="goal-row">'
+            f'<div class="goal-top"><div>{escape(row["title"])}</div><div>{progress}%</div></div>'
+            f'<div class="goal-track"><div class="goal-fill" style="width:{progress}%"></div></div>'
+            f'<div class="todo-sub">{escape(row["next_step"] or "Prochaine etape a definir")} - {escape(days_text(row["due_date"]))}</div>'
+            f'</div>'
+        )
+    st.markdown(f'<div class="panel">{rows_html}</div>', unsafe_allow_html=True)
+
+
+def render_stats_strip(apps: pd.DataFrame, events: pd.DataFrame, contacts: pd.DataFrame, goals: pd.DataFrame) -> None:
+    sent = int((apps["status"] != "Entreprise cible").sum()) if not apps.empty else 0
+    week_actions = 0
+    if not events.empty:
+        week_actions += int(((events["done"] == 0) & (events["days_left"] <= 7)).sum())
+    if not contacts.empty:
+        week_actions += int((contacts["days_left"].fillna(99) <= 7).sum())
+    goal_progress = f"{int(goals['progress'].mean())}%" if not goals.empty else "0%"
+    fields = int(apps["field"].nunique()) if not apps.empty else 0
+    st.markdown(
+        f"""
+        <div class="stat-strip">
+            <div class="mini-stat"><div class="mini-stat-value">{sent}</div><div class="mini-stat-label">candidatures envoyees ou avancees</div></div>
+            <div class="mini-stat"><div class="mini-stat-value">{week_actions}</div><div class="mini-stat-label">rappels a traiter cette semaine</div></div>
+            <div class="mini-stat"><div class="mini-stat-value">{escape(goal_progress)}</div><div class="mini-stat-label">avancement moyen des objectifs</div></div>
+        </div>
+        <div style="height:10px"></div>
+        <div class="mini-stat"><div class="mini-stat-value">{fields}</div><div class="mini-stat-label">domaines finance actifs dans le pipeline</div></div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def application_form(prefix: str = "application") -> None:
     with st.form(f"{prefix}_form", clear_on_submit=True):
         left, right = st.columns(2)
@@ -1102,9 +1326,9 @@ def home_page() -> None:
     left, right = st.columns([1.35, .75])
     with left:
         page_intro(
+            "Tableau de bord",
+            "La premiere vue pour savoir ou tu en es: candidatures en cours, objectifs, to-do, rappels et statistiques utiles.",
             "My Finance Career",
-            "Un espace de pilotage pour transformer une recherche finance en systeme clair: priorites, relances, preparation et reseau.",
-            "Workspace",
         )
     with right:
         brief_panel(active_apps, events, contacts)
@@ -1120,6 +1344,15 @@ def home_page() -> None:
     with c4:
         metric_card("Retards", overdue, "relances depassees")
     st.markdown("</div>", unsafe_allow_html=True)
+
+    dashboard_left, dashboard_right = st.columns([1.12, .88])
+    with dashboard_left:
+        section_label("To-do prioritaire")
+        render_todo_panel(dashboard_todos(active_apps, events, contacts, goals))
+    with dashboard_right:
+        section_label("Objectifs et statistiques")
+        render_goal_panel(goals)
+        render_stats_strip(active_apps, events, contacts, goals)
 
     left, middle, right = st.columns([1.05, 1, .95])
     with left:

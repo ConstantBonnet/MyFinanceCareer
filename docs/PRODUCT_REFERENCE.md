@@ -6,7 +6,7 @@ My Finance Career est un espace de pilotage pour etudiants en finance. L'applica
 
 ## Perimetre livre
 
-- Accueil decisionnel avec priorites et signaux de traction.
+- Tableau de bord en premiere page avec candidatures en cours, objectifs, to-do, rappels et statistiques.
 - Pipeline de candidatures avec focus list, filtres et mise a jour rapide.
 - Agenda avec deadlines, entretiens, tests, relances et marquage termine.
 - Reseau professionnel avec contacts classes par metier, suivi des relances, statut, canal et priorite.
