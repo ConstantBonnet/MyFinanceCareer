@@ -986,6 +986,18 @@ def setup_page() -> None:
         div[data-testid="stExpander"] details summary p {
             font-weight: 790;
         }
+        div[class*="st-key-complete_goal_"] button {
+            min-height: 44px;
+            background: var(--emerald-dark) !important;
+            border-color: var(--emerald-dark) !important;
+            color: #ffffff !important;
+            font-weight: 790 !important;
+        }
+        div[class*="st-key-complete_goal_"] button:hover {
+            background: var(--night) !important;
+            border-color: var(--night) !important;
+            color: #ffffff !important;
+        }
         div[data-testid="stDataFrame"], div[data-testid="stTable"] {
             border: 1px solid var(--line);
             border-radius: 8px;
@@ -1770,13 +1782,20 @@ def goals_page() -> None:
     section_label("Actions ouvertes")
     for _, row in active_goals.iterrows():
         hot = row["priority"] == "Haute" or (pd.notna(row["days_left"]) and row["days_left"] <= 3)
-        item_card(
-            row["title"],
-            row["next_step"] or row["notes"] or "Prochaine etape a definir.",
-            [row["priority"], row["status"], days_text(row["due_date"]), row["field"] or "General"],
-            hot=hot,
-        )
-        st.progress(max(0, min(100, int(row["progress"] or 0))) / 100)
+        goal_col, action_col = st.columns([.78, .22], vertical_alignment="center")
+        with goal_col:
+            item_card(
+                row["title"],
+                row["next_step"] or row["notes"] or "Prochaine etape a definir.",
+                [row["priority"], row["status"], days_text(row["due_date"]), row["field"] or "General"],
+                hot=hot,
+            )
+            st.progress(max(0, min(100, int(row["progress"] or 0))) / 100)
+        with action_col:
+            if st.button("Terminer", key=f"complete_goal_{int(row['id'])}", width="stretch"):
+                run_sql("UPDATE goals SET status = 'Termine', progress = 100 WHERE id = ?", (int(row["id"]),))
+                st.success("Action terminee.")
+                st.rerun()
 
     done_goals = goals[goals["status"] == "Termine"]
     if not done_goals.empty:

@@ -86,6 +86,7 @@ def main() -> None:
     check('header[data-testid="stHeader"]' in app_source and "pointer-events: none" in app_source, "Streamlit header overlay cannot intercept navigation clicks")
     check("<h1>{escape(title)}</h1>" not in app_source, "large page titles are removed from page introductions")
     check("form_intro(" in app_source and "form_section(" in app_source, "add forms use structured visual sections")
+    check("complete_goal_" in app_source and "UPDATE goals SET status = 'Termine', progress = 100" in app_source, "open goals can be completed from the task list")
     check("nav-form" not in app_source and "nav-menu" not in app_source, "abandoned HTML navigation is removed")
 
     print("Release verification passed.")
