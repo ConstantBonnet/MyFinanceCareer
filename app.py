@@ -504,6 +504,7 @@ def setup_page() -> None:
             align-items: center;
             gap: 10px;
             min-width: 0;
+            flex: 0 0 auto;
         }
         .appbar-brand img {
             width: 60px;
@@ -517,12 +518,14 @@ def setup_page() -> None:
             font-size: 1.02rem;
             font-weight: 820;
             color: var(--ink);
+            white-space: nowrap;
         }
         .topnav-links {
             display: flex;
             align-items: center;
             justify-content: flex-end;
             gap: 8px;
+            flex: 1 1 auto;
             min-width: 0;
             overflow-x: auto;
             scrollbar-width: none;
@@ -544,6 +547,18 @@ def setup_page() -> None:
             font-size: .92rem;
             font-weight: 760;
             text-decoration: none !important;
+            position: relative;
+            box-sizing: border-box;
+            flex: 0 0 auto;
+            min-width: 112px;
+            line-height: 38px;
+            cursor: pointer;
+        }
+        .nav-pill::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
         }
         .nav-pill:hover {
             border-color: var(--emerald-dark);
@@ -565,6 +580,43 @@ def setup_page() -> None:
             margin-top: 0 !important;
             margin-bottom: 0 !important;
         }
+        div[data-testid="stTextInput"] input,
+        div[data-testid="stTextArea"] textarea,
+        div[data-testid="stDateInput"] input {
+            border-radius: 8px !important;
+            border: 1px solid var(--line) !important;
+            background: rgba(255,255,255,.96) !important;
+            box-shadow: none !important;
+        }
+        div[data-testid="stTextInput"] input:focus,
+        div[data-testid="stTextArea"] textarea:focus,
+        div[data-testid="stDateInput"] input:focus,
+        div[data-testid="stSelectbox"] [data-baseweb="select"] > div:focus-within {
+            border-color: var(--emerald-dark) !important;
+            box-shadow: 0 0 0 3px rgba(18,184,134,.12) !important;
+        }
+        div[data-testid="stForm"] {
+            border: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+        }
+        div[data-testid="stForm"] label p {
+            color: #202826;
+            font-size: .82rem;
+            font-weight: 760;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button {
+            min-height: 44px;
+            background: var(--night) !important;
+            border-color: var(--night) !important;
+            color: #ffffff !important;
+            font-weight: 780 !important;
+        }
+        div[data-testid="stForm"] div[data-testid="stFormSubmitButton"] button:hover {
+            background: var(--emerald-dark) !important;
+            border-color: var(--emerald-dark) !important;
+            color: #ffffff !important;
+        }
         .hero-grid {
             display: grid;
             grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
@@ -573,7 +625,9 @@ def setup_page() -> None:
             margin-bottom: 22px;
         }
         .hero-copy {
-            padding: 2px 0 12px;
+            padding: 14px 0 16px;
+            border-bottom: 1px solid rgba(16,24,23,.1);
+            margin-bottom: 16px;
         }
         .eyebrow {
             color: var(--emerald-dark);
@@ -585,8 +639,41 @@ def setup_page() -> None:
         .lead {
             color: #45504d;
             max-width: 680px;
-            font-size: 1.05rem;
-            line-height: 1.65;
+            font-size: 1rem;
+            line-height: 1.55;
+        }
+        .form-intro {
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(247,251,248,.92));
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin: 2px 0 14px;
+        }
+        .form-title {
+            color: var(--ink);
+            font-size: 1rem;
+            font-weight: 830;
+            line-height: 1.25;
+        }
+        .form-subtitle {
+            color: var(--muted);
+            font-size: .88rem;
+            line-height: 1.45;
+            margin-top: 4px;
+        }
+        .form-section-title {
+            color: var(--emerald-dark);
+            font-size: .76rem;
+            font-weight: 830;
+            letter-spacing: 0;
+            text-transform: uppercase;
+            margin: 14px 0 6px;
+        }
+        .form-note {
+            color: var(--muted);
+            font-size: .82rem;
+            line-height: 1.4;
+            margin: -2px 0 10px;
         }
         .focus-panel {
             border: 1px solid rgba(18,184,134,.28);
@@ -887,6 +974,9 @@ def setup_page() -> None:
             background: rgba(255,255,255,.78);
             box-shadow: 0 10px 22px rgba(20,24,23,.035);
         }
+        div[data-testid="stExpander"] details summary p {
+            font-weight: 790;
+        }
         div[data-testid="stDataFrame"], div[data-testid="stTable"] {
             border: 1px solid var(--line);
             border-radius: 8px;
@@ -916,13 +1006,27 @@ def setup_page() -> None:
                 position: static;
             }
             .appbar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
+            }
+            .appbar-brand img {
+                width: 48px;
+                height: 30px;
+            }
+            .appbar-title {
+                font-size: .92rem;
             }
             .topnav-links {
-                width: 100%;
+                width: auto;
                 justify-content: flex-start;
+            }
+            .nav-pill {
+                min-width: 96px;
+                min-height: 36px;
+                line-height: 36px;
+                padding: 0 10px;
+                font-size: .84rem;
             }
             .hero-grid {
                 grid-template-columns: 1fr;
@@ -961,8 +1065,17 @@ def setup_page() -> None:
                 min-width: 0;
             }
             .appbar-brand img {
-                width: 52px;
-                height: 32px;
+                width: 44px;
+                height: 28px;
+            }
+            .appbar-title {
+                display: none;
+            }
+            .nav-pill {
+                min-width: 100px;
+                min-height: 36px;
+                line-height: 36px;
+                padding: 0 12px;
             }
         }
         </style>
@@ -1012,7 +1125,6 @@ def page_intro(title: str, subtitle: str, eyebrow: str) -> None:
         f"""
         <div class="hero-copy">
             <div class="eyebrow">{escape(eyebrow)}</div>
-            <h1>{escape(title)}</h1>
             <div class="lead">{escape(subtitle)}</div>
         </div>
         """,
@@ -1022,6 +1134,29 @@ def page_intro(title: str, subtitle: str, eyebrow: str) -> None:
 
 def section_label(text: str) -> None:
     st.markdown(f'<div class="section-label">{escape(text)}</div>', unsafe_allow_html=True)
+
+
+def form_intro(title: str, subtitle: str) -> None:
+    st.markdown(
+        f"""
+        <div class="form-intro">
+            <div class="form-title">{escape(title)}</div>
+            <div class="form-subtitle">{escape(subtitle)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def form_section(title: str, note: str = "") -> None:
+    note_html = f'<div class="form-note">{escape(note)}</div>' if note else ""
+    st.markdown(
+        f"""
+        <div class="form-section-title">{escape(title)}</div>
+        {note_html}
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def metric_card(label: str, value: Any, help_text: str = "") -> None:
@@ -1162,17 +1297,20 @@ def render_calendar(month_start: date, items: list[dict[str, Any]]) -> None:
 
 
 def resource_form(prefix: str = "resource") -> None:
-    with st.form(f"{prefix}_form", clear_on_submit=True):
-        left, right = st.columns(2)
+    with st.form(f"{prefix}_form", clear_on_submit=True, border=False):
+        form_intro("Nouvelle ressource", "Ajoute un lien utile et classe-le directement pour le retrouver sans fouiller.")
+        form_section("Essentiel", "Le titre et le lien suffisent pour enregistrer la ressource.")
+        left, right = st.columns([1.15, .85])
         with left:
-            title = st.text_input("Titre")
-            category = st.selectbox("Categorie", RESOURCE_CATEGORIES)
-            field = st.selectbox("Domaine associe", [""] + FIELDS)
-        with right:
-            tags = st.text_input("Tags")
+            title = st.text_input("Nom de la ressource", placeholder="Ex: Template CV finance")
             link = st.text_input("Lien externe", placeholder="https://drive.google.com/...")
-        description = st.text_area("Pourquoi c'est utile")
-        submitted = st.form_submit_button("Ajouter la ressource", width="stretch")
+        with right:
+            category = st.selectbox("Categorie", RESOURCE_CATEGORIES)
+            field = st.selectbox("Domaine associe", [""] + FIELDS, placeholder="Choisir un domaine")
+        form_section("Contexte")
+        tags = st.text_input("Tags", placeholder="Ex: CV, IB, entretien")
+        description = st.text_area("Pourquoi c'est utile", placeholder="Ce que cette ressource aide a preparer, quand l'utiliser, points importants...", height=96)
+        submitted = st.form_submit_button("Enregistrer la ressource", width="stretch")
     if submitted:
         if not title or not link:
             st.error("Ajoute au minimum un titre et un lien.")
@@ -1186,17 +1324,20 @@ def resource_form(prefix: str = "resource") -> None:
 
 
 def event_form(prefix: str = "event") -> None:
-    with st.form(f"{prefix}_form", clear_on_submit=True):
-        left, right = st.columns(2)
+    with st.form(f"{prefix}_form", clear_on_submit=True, border=False):
+        form_intro("Nouvel evenement", "Ajoute une echeance, une relance, un entretien ou une tache au calendrier.")
+        form_section("Details")
+        left, right = st.columns([1.15, .85])
         with left:
-            title = st.text_input("Titre")
+            title = st.text_input("Titre", placeholder="Ex: Relancer alumni Lazard")
+            related_company = st.text_input("Entreprise associee", placeholder="Ex: Lazard")
+        with right:
             event_type = st.selectbox("Type", EVENT_TYPES)
             event_date = st.date_input("Date", value=date.today() + timedelta(days=7))
-        with right:
-            related_company = st.text_input("Entreprise associee")
             priority = st.selectbox("Priorite", PRIORITIES)
-            done = st.checkbox("Deja termine")
-        notes = st.text_area("Notes")
+        form_section("Suivi")
+        done = st.checkbox("Deja termine")
+        notes = st.text_area("Notes", placeholder="Objectif de l'evenement, preparation a faire, message a envoyer...", height=96)
         submitted = st.form_submit_button("Ajouter a l'agenda", width="stretch")
     if submitted:
         if not title:
@@ -1297,31 +1438,44 @@ def contacts_page() -> None:
         metric_card("Actifs", len(active_contacts), "hors contacts dormants")
 
     with st.expander("Ajouter un contact reseau", expanded=contacts.empty):
-        with st.form("contact_form", clear_on_submit=True):
+        with st.form("contact_form", clear_on_submit=True, border=False):
+            form_intro("Nouveau contact reseau", "Enregistre la personne, son contexte et la prochaine action a faire.")
+            form_section("Identite")
+            left, right = st.columns(2)
+            with left:
+                first_name = st.text_input("Prenom", placeholder="Ex: Camille")
+                company = st.text_input("Entreprise", placeholder="Ex: Rothschild & Co")
+                role = st.text_input("Poste actuel", placeholder="Ex: Analyst M&A")
+            with right:
+                last_name = st.text_input("Nom", placeholder="Ex: Martin")
+                city = st.text_input("Ville", placeholder="Ex: Paris")
+                seniority = st.selectbox("Seniorite", SENIORITY_LEVELS)
+
+            form_section("Classification", "Ces champs servent a filtrer ton reseau et a prioriser les relances.")
             left, mid, right = st.columns(3)
             with left:
-                first_name = st.text_input("Prenom")
-                last_name = st.text_input("Nom")
-                company = st.text_input("Entreprise")
-                role = st.text_input("Poste actuel")
                 profession = st.selectbox("Metier", NETWORK_PROFESSIONS)
+                target_role = st.text_input("Cible / poste vise", placeholder="Ex: Stage M&A")
             with mid:
-                seniority = st.selectbox("Seniorite", SENIORITY_LEVELS)
-                target_role = st.text_input("Cible / poste vise")
-                relation = st.text_input("Type de relation", placeholder="Alumni, recruteur, contact LinkedIn...")
+                relation = st.text_input("Type de relation", placeholder="Alumni, recruteur, LinkedIn...")
                 status = st.selectbox("Statut", NETWORK_STATUSES, index=1)
-                priority = st.selectbox("Priorite", PRIORITIES)
             with right:
                 channel = st.selectbox("Canal", NETWORK_CHANNELS)
-                source = st.text_input("Source", placeholder="Excel, LinkedIn, evenement...")
-                city = st.text_input("Ville")
-                linkedin = st.text_input("LinkedIn")
-                email = st.text_input("Email / telephone")
-            last = st.date_input("Derniere interaction", value=date.today())
-            follow = st.date_input("Prochaine relance", value=date.today() + timedelta(days=14))
-            associated = st.text_input("Opportunite associee")
-            notes = st.text_area("Notes")
-            submitted = st.form_submit_button("Ajouter le contact", width="stretch")
+                priority = st.selectbox("Priorite", PRIORITIES)
+
+            form_section("Coordonnees et relance")
+            left, mid, right = st.columns(3)
+            with left:
+                linkedin = st.text_input("LinkedIn", placeholder="https://linkedin.com/in/...")
+                source = st.text_input("Source", placeholder="Excel, event, alumni...")
+            with mid:
+                email = st.text_input("Email / telephone", placeholder="email ou numero")
+                associated = st.text_input("Opportunite associee", placeholder="Ex: Summer internship")
+            with right:
+                last = st.date_input("Derniere interaction", value=date.today())
+                follow = st.date_input("Prochaine relance", value=date.today() + timedelta(days=14))
+            notes = st.text_area("Notes", placeholder="Contexte de l'echange, sujet a aborder, prochaine phrase de relance...", height=104)
+            submitted = st.form_submit_button("Enregistrer le contact", width="stretch")
         if submitted:
             name = " ".join(part.strip() for part in [first_name, last_name] if part.strip())
             if not name:
@@ -1571,17 +1725,23 @@ def goals_page() -> None:
         metric_card("En retard", len(late_goals), "echeances depassees")
 
     with st.expander("Ajouter une action", expanded=goals.empty):
-        with st.form("goal_form", clear_on_submit=True):
-            left, right = st.columns(2)
+        with st.form("goal_form", clear_on_submit=True, border=False):
+            form_intro("Nouvelle action", "Transforme une intention en prochaine etape concrete, datee et priorisee.")
+            form_section("Action")
+            left, right = st.columns([1.15, .85])
             with left:
-                title = st.text_input("Action / objectif")
+                title = st.text_input("Action / objectif", placeholder="Ex: Envoyer 5 candidatures en M&A")
+                next_step = st.text_input("Prochaine etape", placeholder="Ex: finaliser le CV avant vendredi")
+            with right:
                 due = st.date_input("Echeance", value=date.today() + timedelta(days=7))
                 priority = st.selectbox("Priorite", PRIORITIES)
-            with right:
                 field = st.selectbox("Domaine", [""] + FIELDS)
+            form_section("Etat")
+            left, right = st.columns([.85, 1.15])
+            with left:
                 status = st.selectbox("Statut", GOAL_STATUSES)
-                next_step = st.text_input("Prochaine etape")
-            notes = st.text_area("Notes")
+            with right:
+                notes = st.text_area("Notes", placeholder="Pourquoi c'est important, criteres de reussite, ressources associees...", height=96)
             submitted = st.form_submit_button("Ajouter a ma to-do", width="stretch")
     if submitted:
         if not title:

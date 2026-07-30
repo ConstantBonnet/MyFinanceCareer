@@ -82,6 +82,9 @@ def main() -> None:
     check('st.selectbox("Menu"' not in app_source, "dropdown navigation is removed from the header")
     check("sync_page_nav" not in app_source, "old dropdown navigation callback is removed")
     check("topnav-links" in app_source and "nav-pill" in app_source, "header navigation uses direct horizontal links")
+    check(".nav-pill::after" in app_source, "header navigation link hit areas cover the full pill")
+    check("<h1>{escape(title)}</h1>" not in app_source, "large page titles are removed from page introductions")
+    check("form_intro(" in app_source and "form_section(" in app_source, "add forms use structured visual sections")
     check("nav-form" not in app_source and "nav-menu" not in app_source, "abandoned HTML navigation is removed")
 
     print("Release verification passed.")
