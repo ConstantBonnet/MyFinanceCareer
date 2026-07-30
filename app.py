@@ -535,7 +535,7 @@ def setup_page() -> None:
         }
         .block-container {
             max-width: 1220px;
-            padding: 1.2rem 1.6rem 2.5rem;
+            padding: .45rem 1.6rem 2.5rem;
         }
         section[data-testid="stSidebar"], div[data-testid="collapsedControl"] {
             display: none !important;
@@ -564,84 +564,60 @@ def setup_page() -> None:
             font-size: 1.05rem;
             margin: 0 0 .55rem;
         }
-        .topbar {
+        .appbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 18px;
-            padding: 12px 0 14px;
-            border-bottom: 1px solid rgba(16,24,23,.12);
-            margin-bottom: 10px;
-        }
-        .brand {
-            display: flex;
-            align-items: center;
-            min-width: 240px;
-            gap: 12px;
-        }
-        .brand img {
-            width: 54px;
-            height: 54px;
-            object-fit: cover;
-            border-radius: 12px;
-            background: #0b1714;
-            box-shadow: 0 16px 34px rgba(5,115,95,.18);
-        }
-        .brand-title {
-            font-size: 1.08rem;
-            font-weight: 820;
-            color: var(--ink);
-        }
-        .brand-subtitle {
-            color: var(--muted);
-            font-size: .83rem;
-            margin-top: 2px;
-        }
-        .topbar-note {
-            color: var(--muted);
-            font-size: .86rem;
-            text-align: right;
-        }
-        div[role="radiogroup"] {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 18px;
-            margin: 0 0 28px;
-            padding: 0 0 10px;
-            background: transparent;
-            border-bottom: 1px solid rgba(20,24,23,.13);
-            border-radius: 0;
-            box-shadow: none;
+            gap: 14px;
+            min-height: 42px;
+            padding: 2px 0 4px;
+            margin-bottom: 0;
             position: sticky;
             top: 0;
             z-index: 999;
+            background: rgba(239,249,244,.88);
             backdrop-filter: blur(14px);
         }
-        div[role="radiogroup"] label {
-            min-height: 30px;
-            border: 1px solid transparent;
-            border-bottom: 2px solid transparent;
-            border-radius: 0;
-            background: rgba(245,247,244,.72);
-            padding: 6px 2px 8px;
-            box-shadow: none;
+        .appbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        div[role="radiogroup"] label p {
-            color: var(--muted) !important;
-            font-weight: 720 !important;
-            font-size: .88rem !important;
+        .appbar-brand img {
+            width: 34px;
+            height: 34px;
+            object-fit: cover;
+            border-radius: 9px;
+            background: #0b1714;
+            box-shadow: 0 10px 20px rgba(5,115,95,.14);
         }
-        div[role="radiogroup"] label:has(input:checked) {
-            border-color: transparent transparent var(--emerald-dark);
-            background: transparent;
+        .appbar-title {
+            font-size: 1.02rem;
+            font-weight: 820;
             color: var(--ink);
-            box-shadow: none;
         }
-        div[role="radiogroup"] label:has(input:checked) p {
-            color: var(--ink) !important;
+        .appbar-subtitle {
+            color: var(--muted);
+            font-size: .78rem;
+            margin-top: 2px;
         }
-        div[role="radiogroup"] label > div:first-child {
-            display: none;
+        div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+            border-radius: 8px !important;
+            border-color: var(--line-strong) !important;
+            background: rgba(255,255,255,.9) !important;
+            min-height: 36px;
+        }
+        div[data-testid="stSelectbox"] {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        div[data-testid="stSelectbox"] label {
+            display: none !important;
+        }
+        .appbar-rule {
+            height: 1px;
+            background: rgba(16,24,23,.12);
+            margin: 0 0 2px;
         }
         .hero-grid {
             display: grid;
@@ -651,7 +627,7 @@ def setup_page() -> None:
             margin-bottom: 22px;
         }
         .hero-copy {
-            padding: 30px 0 24px;
+            padding: 2px 0 12px;
         }
         .eyebrow {
             color: var(--emerald-dark);
@@ -776,7 +752,7 @@ def setup_page() -> None:
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 12px;
-            margin: 12px 0 22px;
+            margin: 6px 0 18px;
         }
         .metric-card {
             border: 1px solid var(--line);
@@ -990,12 +966,11 @@ def setup_page() -> None:
             .block-container {
                 padding: .75rem .85rem 1.8rem;
             }
-            .topbar {
-                align-items: flex-start;
-                flex-direction: column;
+            .appbar {
+                position: static;
             }
-            .topbar-note {
-                text-align: left;
+            .appbar-subtitle {
+                display: none;
             }
             .hero-grid {
                 grid-template-columns: 1fr;
@@ -1030,20 +1005,12 @@ def setup_page() -> None:
             .metric-grid {
                 grid-template-columns: 1fr;
             }
-            .brand {
+            .appbar-brand {
                 min-width: 0;
             }
-            .brand img {
-                width: 46px;
-                height: 46px;
-            }
-            div[role="radiogroup"] {
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                padding: 8px;
-            }
-            div[role="radiogroup"] label {
-                white-space: nowrap;
+            .appbar-brand img {
+                width: 34px;
+                height: 34px;
             }
         }
         </style>
@@ -1052,39 +1019,33 @@ def setup_page() -> None:
     )
 
 
-def render_header() -> None:
+def render_header() -> str:
     logo = logo_data_uri()
     logo_html = f'<img src="{logo}" alt="My Finance Career logo">' if logo else ""
-    st.markdown(
-        f"""
-        <div class="topbar">
-            <div class="brand">
-                {logo_html}
-                <div>
-                    <div class="brand-title">My Finance Career</div>
-                    <div class="brand-subtitle">Career operating system for finance roles</div>
-                </div>
-            </div>
-            <div class="topbar-note">Pipeline, relances, entretiens, contacts et ressources au meme endroit.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def nav() -> str:
     requested_page = st.query_params.get("page", "Accueil")
     default_index = PAGES.index(requested_page) if requested_page in PAGES else 0
     if "page_nav" not in st.session_state or st.session_state.get("_url_page") != requested_page:
         st.session_state["page_nav"] = PAGES[default_index]
         st.session_state["_url_page"] = requested_page
-    page = st.radio(
-        "Navigation",
-        PAGES,
-        horizontal=True,
-        label_visibility="collapsed",
-        key="page_nav",
-    )
+
+    left, right = st.columns([1, .28], vertical_alignment="center")
+    with left:
+        st.markdown(
+            f"""
+            <div class="appbar">
+                <div class="appbar-brand">
+                {logo_html}
+                    <div>
+                        <div class="appbar-title">My Finance Career</div>
+                    </div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with right:
+        page = st.selectbox("Aller a", PAGES, index=default_index, label_visibility="collapsed", key="page_nav")
+    st.markdown('<div class="appbar-rule"></div>', unsafe_allow_html=True)
     if st.query_params.get("page") != page:
         st.query_params["page"] = page
         st.session_state["_url_page"] = page
@@ -1528,12 +1489,6 @@ def home_page() -> None:
     overdue = int((active_apps["days_to_follow"] < 0).sum()) if not active_apps.empty else 0
     upcoming_events = events[(events["done"] == 0) & (events["days_left"] >= 0) & (events["days_left"] <= 14)] if not events.empty else events
     conversion = f"{interviews / max(len(sent_base), 1):.0%}" if not active_apps.empty else "0%"
-
-    page_intro(
-        "Tableau de bord",
-        "La premiere vue pour savoir ou tu en es: candidatures en cours, objectifs, to-do, rappels et statistiques utiles.",
-        "My Finance Career",
-    )
 
     st.markdown('<div class="metric-grid">', unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)
@@ -2088,8 +2043,7 @@ def main() -> None:
     setup_page()
     init_db()
     seed_demo()
-    render_header()
-    page = nav()
+    page = render_header()
     pages = {
         "Accueil": home_page,
         "Pipeline": pipeline_page,
