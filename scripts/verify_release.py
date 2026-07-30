@@ -18,7 +18,7 @@ REQUIRED_FILES = [
     "static/logo.png",
     "static/logo_mark.png",
 ]
-REQUIRED_PAGES = ["Objectifs", "Calendrier", "Bibliotheque", "Reseau"]
+REQUIRED_PAGES = ["Accueil", "Objectifs", "Calendrier", "Bibliotheque", "Reseau"]
 REQUIRED_TABLES = ["resources", "events", "goals", "contacts"]
 REQUIRED_CONTACT_COLUMNS = {
     "profession_group",
@@ -76,7 +76,7 @@ def main() -> None:
             profession_count = conn.execute("SELECT COUNT(DISTINCT profession_group) FROM contacts").fetchone()[0]
             check(profession_count >= 2, "network demo contacts are classified by profession")
 
-    check(app.PAGES == REQUIRED_PAGES, "navigation is limited to the four core pages")
+    check(app.PAGES == REQUIRED_PAGES, "navigation includes the home dashboard and core pages")
     check(app.LOGO_PATH.name == "logo_mark.png", "transparent logo mark is used in the header")
     app_source = read("app.py")
     check('st.selectbox("Menu"' not in app_source, "dropdown navigation is removed from the header")
@@ -87,6 +87,7 @@ def main() -> None:
     check("<h1>{escape(title)}</h1>" not in app_source, "large page titles are removed from page introductions")
     check("form_intro(" in app_source and "form_section(" in app_source, "add forms use structured visual sections")
     check("complete_goal_" in app_source and "UPDATE goals SET status = 'Termine', progress = 100" in app_source, "open goals can be completed from the task list")
+    check("dashboard_page" in app_source and "command_center" in app_source and "route-card" in app_source, "home dashboard provides a redesigned command center")
     check("nav-form" not in app_source and "nav-menu" not in app_source, "abandoned HTML navigation is removed")
 
     print("Release verification passed.")

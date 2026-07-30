@@ -51,8 +51,9 @@ NETWORK_STATUSES = ["A contacter", "Contacte", "A relancer", "Echange planifie",
 NETWORK_CHANNELS = ["LinkedIn", "Email", "Call", "Coffee chat", "Event", "Alumni platform", "Referral", "Other"]
 SENIORITY_LEVELS = ["Student", "Intern", "Analyst", "Associate", "Manager", "VP", "Director", "Partner", "Recruiter", "Other"]
 TABLES = ["resources", "events", "goals", "contacts"]
-PAGES = ["Objectifs", "Calendrier", "Bibliotheque", "Reseau"]
+PAGES = ["Accueil", "Objectifs", "Calendrier", "Bibliotheque", "Reseau"]
 NAV_LABELS = {
+    "Accueil": "Accueil",
     "Objectifs": "Objectifs",
     "Calendrier": "Calendrier",
     "Bibliotheque": "Bibliotheque",
@@ -424,6 +425,10 @@ def logo_data_uri() -> str:
         return ""
     encoded = base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
     return f"data:image/png;base64,{encoded}"
+
+
+def today_label() -> str:
+    return f"{WEEKDAY_LABELS[date.today().weekday()]} {date.today().strftime('%d/%m')}"
 
 
 def setup_page() -> None:
@@ -1099,6 +1104,288 @@ def setup_page() -> None:
                 padding: 0 12px;
             }
         }
+        .stApp {
+            background:
+                linear-gradient(180deg, #f4fbf7 0, #f8faf7 230px, #f5f6f2 100%),
+                #f5f6f2;
+        }
+        .block-container {
+            max-width: 1360px;
+            padding: .25rem 1.25rem 2.6rem;
+        }
+        div.st-key-app_topbar {
+            padding: 10px 0 12px;
+            margin-bottom: 14px;
+            background: rgba(246,250,247,.94);
+            border-bottom: 1px solid rgba(20,24,23,.1);
+            box-shadow: 0 10px 28px rgba(20,24,23,.055);
+        }
+        .appbar {
+            min-height: 58px;
+            gap: 18px;
+        }
+        .appbar-brand {
+            gap: 12px;
+            min-width: 220px;
+        }
+        .appbar-brand img {
+            width: 72px;
+            height: 42px;
+        }
+        .appbar-title {
+            font-size: 1.08rem;
+            font-weight: 850;
+        }
+        .appbar-meta {
+            color: #6f5540;
+            border: 1px solid #e2c9aa;
+            background: #fff7eb;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: .78rem;
+            font-weight: 790;
+            white-space: nowrap;
+        }
+        .topnav-links {
+            gap: 6px;
+            justify-content: center;
+            padding: 4px;
+            background: rgba(255,255,255,.74);
+            border: 1px solid rgba(185,201,193,.82);
+            border-radius: 10px;
+        }
+        .nav-pill {
+            height: 42px;
+            min-width: 106px;
+            padding: 0 16px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: #4d5955 !important;
+            font-size: .9rem;
+            font-weight: 790;
+        }
+        .nav-pill:hover {
+            color: var(--night) !important;
+            background: #f2f6f3;
+        }
+        .nav-pill.is-active {
+            background: var(--night);
+            color: #ffffff !important;
+            box-shadow: 0 10px 20px rgba(16,24,23,.18);
+        }
+        .module-header {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: end;
+            padding: 8px 0 18px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(20,24,23,.09);
+        }
+        .module-kicker {
+            color: var(--emerald-dark);
+            font-size: .74rem;
+            font-weight: 850;
+            text-transform: uppercase;
+        }
+        .module-title {
+            margin-top: 5px;
+            color: var(--ink);
+            font-size: 1.2rem;
+            font-weight: 860;
+            line-height: 1.12;
+        }
+        .module-subtitle {
+            color: #52605b;
+            margin-top: 7px;
+            max-width: 760px;
+            font-size: .95rem;
+            line-height: 1.45;
+        }
+        .module-status {
+            color: #6f5540;
+            border: 1px solid #e2c9aa;
+            background: #fff7eb;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: .78rem;
+            font-weight: 790;
+            white-space: nowrap;
+        }
+        .metric-card {
+            min-height: 96px;
+            background: linear-gradient(180deg, #ffffff, #fbfcfa);
+            border: 1px solid rgba(185,201,193,.88);
+            box-shadow: 0 12px 28px rgba(20,24,23,.055);
+        }
+        .metric-value {
+            font-size: 1.9rem;
+        }
+        .section-label {
+            color: #41514c;
+            margin: 24px 0 10px;
+        }
+        .item-card {
+            background: #ffffff;
+            border: 1px solid rgba(185,201,193,.9);
+            box-shadow: 0 8px 18px rgba(20,24,23,.04);
+        }
+        .item-card:hover {
+            border-color: rgba(5,115,95,.42);
+            box-shadow: 0 14px 30px rgba(20,24,23,.07);
+        }
+        .command-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.18fr) minmax(340px, .82fr);
+            gap: 16px;
+            align-items: stretch;
+            margin: 8px 0 20px;
+        }
+        .command-main,
+        .command-side {
+            border: 1px solid rgba(185,201,193,.9);
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 14px 30px rgba(20,24,23,.055);
+            padding: 18px;
+        }
+        .command-main {
+            background:
+                linear-gradient(135deg, rgba(7,115,95,.96), rgba(16,24,23,.98)),
+                var(--night);
+            color: #f5fff9;
+        }
+        .command-main .module-kicker,
+        .command-main .muted {
+            color: rgba(245,255,249,.72);
+        }
+        .command-title {
+            font-size: 1.55rem;
+            line-height: 1.14;
+            font-weight: 870;
+            max-width: 720px;
+            margin-top: 8px;
+        }
+        .command-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 18px;
+        }
+        .command-chip {
+            border: 1px solid rgba(245,255,249,.22);
+            border-radius: 999px;
+            padding: 6px 9px;
+            color: #d9fff2;
+            font-size: .78rem;
+            font-weight: 760;
+        }
+        .route-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin: 16px 0 6px;
+        }
+        .route-card {
+            display: block;
+            min-height: 118px;
+            padding: 14px;
+            border: 1px solid rgba(185,201,193,.9);
+            border-radius: 8px;
+            background: #ffffff;
+            color: var(--ink) !important;
+            text-decoration: none !important;
+            box-shadow: 0 10px 22px rgba(20,24,23,.045);
+        }
+        .route-card:hover {
+            border-color: rgba(5,115,95,.48);
+            transform: translateY(-1px);
+        }
+        .route-name {
+            font-weight: 840;
+            font-size: 1rem;
+        }
+        .route-copy {
+            color: var(--muted);
+            font-size: .84rem;
+            line-height: 1.38;
+            margin-top: 8px;
+        }
+        .route-count {
+            color: var(--emerald-dark);
+            font-size: .78rem;
+            font-weight: 820;
+            margin-top: 12px;
+        }
+        .form-intro {
+            border-color: rgba(185,201,193,.9);
+            background: #fbfcfa;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+        }
+        div[data-testid="stExpander"] {
+            background: #ffffff;
+            border-color: rgba(185,201,193,.9);
+        }
+        div[data-testid="stTabs"] button {
+            border-radius: 8px !important;
+            font-weight: 780 !important;
+        }
+        .calendar-shell {
+            background: #ffffff;
+        }
+        .calendar-head div {
+            background: #f2f6f3;
+            color: #43534e;
+        }
+        .calendar-day {
+            background: #ffffff;
+        }
+        .calendar-muted {
+            background: #f7f8f5;
+        }
+        .calendar-event {
+            background: #f6fbf8;
+        }
+        @media (max-width: 980px) {
+            .appbar {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+            .appbar-brand {
+                min-width: 0;
+            }
+            .appbar-meta {
+                display: none;
+            }
+            .topnav-links {
+                order: 3;
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .command-grid,
+            .route-grid {
+                grid-template-columns: 1fr;
+            }
+            .module-header {
+                grid-template-columns: 1fr;
+            }
+            .module-status {
+                width: fit-content;
+            }
+        }
+        @media (max-width: 520px) {
+            .block-container {
+                padding: .25rem .8rem 2rem;
+            }
+            .nav-pill {
+                min-width: 96px;
+                padding: 0 12px;
+            }
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -1133,6 +1420,7 @@ def render_header() -> str:
                 <nav class="topnav-links" aria-label="Navigation My Finance Career">
                     {nav_html}
                 </nav>
+                <div class="appbar-meta">{escape(today_label())}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -1144,9 +1432,13 @@ def render_header() -> str:
 def page_intro(title: str, subtitle: str, eyebrow: str) -> None:
     st.markdown(
         f"""
-        <div class="hero-copy">
-            <div class="eyebrow">{escape(eyebrow)}</div>
-            <div class="lead">{escape(subtitle)}</div>
+        <div class="module-header">
+            <div>
+                <div class="module-kicker">{escape(eyebrow)}</div>
+                <div class="module-title">{escape(title)}</div>
+                <div class="module-subtitle">{escape(subtitle)}</div>
+            </div>
+            <div class="module-status">{escape(today_label())}</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1205,6 +1497,41 @@ def item_card(title: str, body: str, chips: list[Any] | None = None, hot: bool =
             <div class="item-title">{escape(title)}</div>
             <div class="muted">{escape(body)}</div>
             <div class="chips">{chips_html(chips, hot=hot)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def route_cards(routes: list[tuple[str, str, str]]) -> None:
+    cards = ""
+    for page, copy, count in routes:
+        cards += (
+            f'<a class="route-card" href="?page={quote(page)}" target="_self">'
+            f'<div class="route-name">{escape(NAV_LABELS[page])}</div>'
+            f'<div class="route-copy">{escape(copy)}</div>'
+            f'<div class="route-count">{escape(count)}</div>'
+            f'</a>'
+        )
+    st.markdown(f'<div class="route-grid">{cards}</div>', unsafe_allow_html=True)
+
+
+def command_center(title: str, subtitle: str, chips: list[str], side_title: str, side_rows: list[str]) -> None:
+    chips_markup = "".join(f'<span class="command-chip">{escape(chip)}</span>' for chip in chips if chip)
+    side_markup = "".join(f'<div class="todo-row"><div class="todo-type">Focus</div><div><div class="todo-main">{escape(row)}</div></div></div>' for row in side_rows)
+    st.markdown(
+        f"""
+        <div class="command-grid">
+            <div class="command-main">
+                <div class="module-kicker">Centre de pilotage</div>
+                <div class="command-title">{escape(title)}</div>
+                <div class="muted">{escape(subtitle)}</div>
+                <div class="command-meta">{chips_markup}</div>
+            </div>
+            <div class="command-side">
+                <div class="section-label" style="margin-top:0">{escape(side_title)}</div>
+                {side_markup or '<div class="muted">Aucune urgence identifiee.</div>'}
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1372,6 +1699,76 @@ def event_form(prefix: str = "event") -> None:
         st.rerun()
 
 
+def dashboard_page() -> None:
+    page_intro("Accueil", "Ton plan de travail finance en une seule vue : prochaines actions, jalons dates, ressources et reseau.", "Pilotage")
+    resources, events, goals, contacts = resources_df(), events_df(), goals_df(), contacts_df()
+    items = agenda_items(events, contacts, goals)
+
+    active_goals = goals[goals["status"] != "Termine"] if not goals.empty else goals
+    high_goals = active_goals[active_goals["priority"] == "Haute"] if not active_goals.empty else active_goals
+    overdue = [item for item in items if not item["done"] and item["day"] < date.today()]
+    upcoming = [item for item in items if not item["done"] and item["day"] >= date.today()]
+    due_contacts = contacts[contacts["days_left"].fillna(99) <= 7] if not contacts.empty else contacts
+
+    if not high_goals.empty:
+        lead_row = high_goals.iloc[0]
+        focus_title = lead_row["title"]
+        focus_subtitle = lead_row["next_step"] or lead_row["notes"] or "Prochaine etape a clarifier."
+        focus_chips = [lead_row["priority"], days_text(lead_row["due_date"]), lead_row["field"] or "General"]
+    elif upcoming:
+        next_item = upcoming[0]
+        focus_title = next_item["title"]
+        focus_subtitle = next_item["notes"]
+        focus_chips = [next_item["kind"], format_day(next_item["day"]), next_item["priority"]]
+    else:
+        focus_title = "Construire le prochain mouvement"
+        focus_subtitle = "Ajoute une action datee, une relance ou une ressource pour garder ton espace vivant."
+        focus_chips = ["Aujourd'hui", "Plan de travail", "Finance"]
+
+    side_rows = []
+    for item in overdue[:2]:
+        side_rows.append(f"{item['title']} - {days_text(item['day'])}")
+    for _, row in due_contacts.head(2).iterrows() if not due_contacts.empty else []:
+        side_rows.append(f"{row['name']} - relance {days_text(row['next_follow_up'])}")
+
+    command_center(focus_title, focus_subtitle, focus_chips, "A surveiller", side_rows)
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        metric_card("Actions ouvertes", len(active_goals), "objectifs non termines")
+    with c2:
+        metric_card("Jalons a venir", len(upcoming), "agenda, reseau, objectifs")
+    with c3:
+        metric_card("Relances reseau", len(due_contacts), "sous 7 jours")
+    with c4:
+        metric_card("Ressources", len(resources), "liens sauvegardes")
+
+    route_cards(
+        [
+            ("Objectifs", "Priorise et termine tes actions de recherche.", f"{len(active_goals)} ouvertes"),
+            ("Calendrier", "Regroupe deadlines, entretiens et relances.", f"{len(upcoming)} a venir"),
+            ("Bibliotheque", "Retrouve CV, lettres, guides et supports.", f"{len(resources)} ressources"),
+            ("Reseau", "Pilote contacts, metiers et prochaines relances.", f"{len(contacts)} contacts"),
+        ]
+    )
+
+    left, right = st.columns([1.05, .95])
+    with left:
+        section_label("Prochains jalons")
+        if upcoming:
+            for item in upcoming[:6]:
+                item_card(item["title"], item["notes"], [item["kind"], format_day(item["day"]), item["priority"], item["source"]], hot=item["day"] <= date.today() + timedelta(days=3))
+        else:
+            st.caption("Aucun jalon a venir.")
+    with right:
+        section_label("Actions prioritaires")
+        if not active_goals.empty:
+            for _, row in active_goals.head(5).iterrows():
+                item_card(row["title"], row["next_step"] or row["notes"] or "Prochaine etape a definir.", [row["priority"], days_text(row["due_date"]), row["field"] or "General"], hot=row["priority"] == "Haute")
+        else:
+            st.caption("Aucune action ouverte.")
+
+
 def agenda_page() -> None:
     page_intro("Calendrier", "Un vrai calendrier mensuel pour ajouter et suivre les echeances, entretiens, relances et objectifs a venir.", "Planning")
     events, contacts, goals = events_df(), contacts_df(), goals_df()
@@ -1442,7 +1839,7 @@ def agenda_page() -> None:
 
 
 def contacts_page() -> None:
-    page_intro("Reseau", "Une bibliotheque de contacts classee par metier, avec les relances et les conversations a piloter.", "Network")
+    page_intro("Reseau", "Une bibliotheque de contacts classee par metier, avec les relances et les conversations a piloter.", "Reseau")
 
     contacts = contacts_df()
     active_contacts = contacts[contacts["status"] != "Dormant"] if not contacts.empty else contacts
@@ -1830,6 +2227,7 @@ def main() -> None:
     seed_demo()
     page = render_header()
     pages = {
+        "Accueil": dashboard_page,
         "Objectifs": goals_page,
         "Calendrier": agenda_page,
         "Bibliotheque": resources_page,
