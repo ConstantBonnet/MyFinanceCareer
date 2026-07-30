@@ -7,7 +7,8 @@ My Finance Career est une application Streamlit qui aide un etudiant en finance 
 - Accueil avec priorites du jour, traction, retards et pipeline actif.
 - Pipeline de candidatures avec focus list, filtres, table exploitable et mise a jour rapide.
 - Agenda pour deadlines, entretiens, tests, relances et networking, avec marquage termine.
-- Contacts professionnels sous forme de mini-CRM avec relances replanifiables.
+- Reseau professionnel sous forme de bibliotheque de contacts, classee par metier, statut, priorite et prochaine relance.
+- Import Excel/CSV d'une fiche de networking existante avec classement metier automatique de base.
 - Ressources classees par categorie, domaine et tags.
 - Objectifs avec progression et prochaine etape modifiable.
 - Analyse du pipeline par statut, domaine, traction et offres.

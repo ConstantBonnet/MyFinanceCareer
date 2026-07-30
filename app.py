@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import html
 import sqlite3
+import unicodedata
 from contextlib import closing
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -50,8 +51,25 @@ CONTRACTS = ["Stage", "Alternance", "Graduate program", "CDI", "VIE"]
 RESOURCE_CATEGORIES = ["CV", "Lettre", "Modele", "Guide", "Cours", "Preparation entretien", "Site utile"]
 EVENT_TYPES = ["Deadline", "Entretien", "Test", "Networking", "Relance", "Tache"]
 GOAL_STATUSES = ["En cours", "En pause", "Termine"]
+NETWORK_PROFESSIONS = [
+    "M&A / Investment Banking",
+    "Private Equity",
+    "Transaction Services",
+    "Valuation",
+    "Audit",
+    "Asset Management",
+    "Markets",
+    "Corporate Finance",
+    "Financial Advisory",
+    "Recruitment / HR",
+    "Alumni / School",
+    "Other",
+]
+NETWORK_STATUSES = ["A contacter", "Contacte", "A relancer", "Echange planifie", "Rencontre", "A remercier", "Dormant"]
+NETWORK_CHANNELS = ["LinkedIn", "Email", "Call", "Coffee chat", "Event", "Alumni platform", "Referral", "Other"]
+SENIORITY_LEVELS = ["Student", "Intern", "Analyst", "Associate", "Manager", "VP", "Director", "Partner", "Recruiter", "Other"]
 TABLES = ["applications", "resources", "events", "goals", "contacts"]
-PAGES = ["Accueil", "Pipeline", "Agenda", "Contacts", "Ressources", "Objectifs", "Analyse", "Donnees"]
+PAGES = ["Accueil", "Pipeline", "Agenda", "Reseau", "Ressources", "Objectifs", "Analyse", "Donnees"]
 
 
 def connect() -> sqlite3.Connection:
@@ -69,6 +87,12 @@ def run_sql(sql: str, values: tuple[Any, ...] = ()) -> None:
 def read_df(sql: str, values: tuple[Any, ...] = ()) -> pd.DataFrame:
     with closing(connect()) as conn:
         return pd.read_sql_query(sql, conn, params=values)
+
+
+def ensure_column(conn: sqlite3.Connection, table: str, column: str, definition: str) -> None:
+    existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    if column not in existing:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
 
 def init_db() -> None:
@@ -132,7 +156,15 @@ def init_db() -> None:
                 name TEXT NOT NULL,
                 company TEXT,
                 role TEXT,
+                profession_group TEXT DEFAULT 'Other',
+                seniority TEXT,
+                target_role TEXT,
                 relation_type TEXT,
+                status TEXT DEFAULT 'A contacter',
+                source TEXT,
+                contact_channel TEXT,
+                city TEXT,
+                priority TEXT DEFAULT 'Moyenne',
                 linkedin TEXT,
                 email TEXT,
                 last_interaction TEXT,
@@ -143,6 +175,14 @@ def init_db() -> None:
             );
             """
         )
+        ensure_column(conn, "contacts", "profession_group", "TEXT DEFAULT 'Other'")
+        ensure_column(conn, "contacts", "seniority", "TEXT")
+        ensure_column(conn, "contacts", "target_role", "TEXT")
+        ensure_column(conn, "contacts", "status", "TEXT DEFAULT 'A contacter'")
+        ensure_column(conn, "contacts", "source", "TEXT")
+        ensure_column(conn, "contacts", "contact_channel", "TEXT")
+        ensure_column(conn, "contacts", "city", "TEXT")
+        ensure_column(conn, "contacts", "priority", "TEXT DEFAULT 'Moyenne'")
         conn.commit()
 
 
@@ -216,19 +256,21 @@ def seed_demo() -> None:
             "INSERT INTO goals (title, field, due_date, progress, status, next_step, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 ("Obtenir un stage M&A a Paris", "Investment Banking", (today + timedelta(days=60)).isoformat(), 45, "En cours", "Envoyer 5 candidatures ciblees", "Priorite aux boutiques et banques avec fort dealflow.", now),
-                ("Contacter 10 alumni en finance", "Financial Advisory", (today + timedelta(days=21)).isoformat(), 30, "En cours", "Identifier 3 anciens en PE", "Suivre les reponses dans Contacts.", now),
+                ("Contacter 10 alumni en finance", "Financial Advisory", (today + timedelta(days=21)).isoformat(), 30, "En cours", "Identifier 3 anciens en PE", "Suivre les reponses dans Reseau.", now),
             ],
         )
         conn.executemany(
             """
             INSERT INTO contacts (
-                name, company, role, relation_type, linkedin, email, last_interaction,
+                name, company, role, profession_group, seniority, target_role, relation_type,
+                status, source, contact_channel, city, priority, linkedin, email, last_interaction,
                 next_follow_up, associated_company, notes, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
-                ("Claire Martin", "Rothschild & Co", "Associate", "Alumni", "https://www.linkedin.com/", "", (today - timedelta(days=2)).isoformat(), (today + timedelta(days=5)).isoformat(), "Rothschild & Co", "Conseils sur les entretiens techniques.", now),
-                ("Marc Dubois", "PwC", "Manager TS", "Recruteur", "https://www.linkedin.com/", "", (today - timedelta(days=6)).isoformat(), (today + timedelta(days=4)).isoformat(), "PwC", "Contact principal pour l'offre TS.", now),
+                ("Claire Martin", "Rothschild & Co", "Associate", "M&A / Investment Banking", "Associate", "M&A Intern", "Alumni", "A relancer", "Alumni school", "LinkedIn", "Paris", "Haute", "https://www.linkedin.com/", "", (today - timedelta(days=2)).isoformat(), (today + timedelta(days=5)).isoformat(), "Rothschild & Co", "Conseils sur les entretiens techniques.", now),
+                ("Marc Dubois", "PwC", "Manager TS", "Transaction Services", "Manager", "TS Intern", "Recruteur", "Echange planifie", "Event", "Coffee chat", "Paris", "Moyenne", "https://www.linkedin.com/", "", (today - timedelta(days=6)).isoformat(), (today + timedelta(days=4)).isoformat(), "PwC", "Contact principal pour l'offre TS.", now),
+                ("Luigi Cazalis", "Clairfield", "M&A Intern", "M&A / Investment Banking", "Intern", "Boutique M&A", "Contact LinkedIn", "Contacte", "LinkedIn search", "Call", "Paris", "Haute", "https://www.linkedin.com/", "", (today - timedelta(days=8)).isoformat(), (today + timedelta(days=9)).isoformat(), "Clairfield", "Conseils utiles sur les messages courts, le one pager et les candidatures spontanees.", now),
             ],
         )
         conn.commit()
@@ -259,9 +301,113 @@ def contacts_df() -> pd.DataFrame:
     data = read_df("SELECT * FROM contacts ORDER BY next_follow_up ASC, id DESC")
     if data.empty:
         return data
+    data = data.copy()
+    for column, default in {
+        "profession_group": "Other",
+        "status": "A contacter",
+        "priority": "Moyenne",
+        "contact_channel": "Other",
+        "seniority": "",
+        "target_role": "",
+        "source": "",
+        "city": "",
+    }.items():
+        if column not in data.columns:
+            data[column] = default
+        data[column] = data[column].fillna(default).replace("", default if column in {"profession_group", "status", "priority", "contact_channel"} else "")
     data["follow_day"] = data["next_follow_up"].apply(parse_day)
     data["days_left"] = data["follow_day"].apply(lambda item: (item - date.today()).days if item else None)
-    return data
+    data["network_score"] = data.apply(contact_score, axis=1)
+    return data.sort_values(["network_score", "days_left", "id"], ascending=[False, True, False])
+
+
+def contact_score(row: pd.Series) -> int:
+    score = PRIORITY_WEIGHT.get(row.get("priority"), 2) * 20
+    days_left = row.get("days_left")
+    if pd.notna(days_left):
+        if days_left < 0:
+            score += 45
+        elif days_left <= 3:
+            score += 30
+        elif days_left <= 7:
+            score += 18
+        elif days_left <= 14:
+            score += 8
+    if row.get("status") in {"A relancer", "A remercier"}:
+        score += 25
+    elif row.get("status") == "Echange planifie":
+        score += 12
+    elif row.get("status") == "Dormant":
+        score -= 20
+    return score
+
+
+def strip_accents(value: Any) -> str:
+    normalized = unicodedata.normalize("NFKD", str(value or ""))
+    return "".join(char for char in normalized if not unicodedata.combining(char)).lower().strip()
+
+
+def infer_profession_group(*values: Any) -> str:
+    text = " ".join(strip_accents(value) for value in values)
+    if any(token in text for token in ["m&a", "mergers", "acquisition", "investment banking", "ibd"]):
+        return "M&A / Investment Banking"
+    if "private equity" in text or "pe " in f"{text} ":
+        return "Private Equity"
+    if "transaction" in text or " ts" in f" {text}" or "financial due diligence" in text:
+        return "Transaction Services"
+    if "valuation" in text or "valo" in text:
+        return "Valuation"
+    if "audit" in text:
+        return "Audit"
+    if "asset management" in text or "portfolio" in text or "gestion d'actifs" in text:
+        return "Asset Management"
+    if "markets" in text or "trading" in text or "sales" in text:
+        return "Markets"
+    if "corporate finance" in text:
+        return "Corporate Finance"
+    if "recruit" in text or "hr" in text or "talent" in text:
+        return "Recruitment / HR"
+    if "alumni" in text or "ecole" in text:
+        return "Alumni / School"
+    if "advisory" in text or "conseil" in text:
+        return "Financial Advisory"
+    return "Other"
+
+
+def normalize_import_columns(data: pd.DataFrame) -> pd.DataFrame:
+    if data.empty:
+        return data
+    raw = data.dropna(how="all").copy()
+    header_index = None
+    for idx, row in raw.iterrows():
+        row_text = " ".join(strip_accents(value) for value in row.tolist())
+        if ("prenom" in row_text or "name" in row_text) and ("entreprise" in row_text or "company" in row_text):
+            header_index = idx
+            break
+    if header_index is not None:
+        headers = [strip_accents(value).replace(" ", "_") or f"column_{i}" for i, value in enumerate(raw.loc[header_index].tolist())]
+        raw = raw.loc[header_index + 1 :].copy()
+        raw.columns = headers
+    else:
+        raw.columns = [strip_accents(column).replace(" ", "_") for column in raw.columns]
+    aliases = {
+        "first_name": ["prenom", "first_name", "firstname"],
+        "last_name": ["nom", "last_name", "lastname"],
+        "name": ["name", "personne"],
+        "role": ["position", "poste", "role", "titre"],
+        "company": ["entreprise", "company", "societe"],
+        "linkedin": ["lien", "linkedin", "link", "url"],
+        "notes": ["note", "notes", "commentaire"],
+        "email": ["contact", "email", "telephone", "phone"],
+    }
+    normalized = pd.DataFrame()
+    for target, names in aliases.items():
+        match = next((name for name in names if name in raw.columns), None)
+        normalized[target] = raw[match] if match else ""
+    normalized = normalized.fillna("")
+    normalized["name"] = normalized.apply(lambda row: " ".join(part for part in [str(row["first_name"]).strip(), str(row["last_name"]).strip()] if part) or str(row["name"]).strip(), axis=1)
+    normalized["profession_group"] = normalized.apply(lambda row: infer_profession_group(row["role"], row["company"], row["notes"]), axis=1)
+    return normalized[normalized["name"].astype(str).str.strip() != ""]
 
 
 def parse_day(value: Any) -> date | None:
@@ -1106,53 +1252,255 @@ def agenda_page() -> None:
 
 
 def contacts_page() -> None:
-    page_intro("Contacts", "Un carnet relationnel oriente action: qui relancer, pourquoi, et pour quelle opportunite.", "Network")
-    with st.form("contact_form", clear_on_submit=True):
-        left, right = st.columns(2)
-        with left:
-            name = st.text_input("Nom")
-            company = st.text_input("Entreprise")
-            role = st.text_input("Poste")
-            relation = st.text_input("Type de relation")
-            linkedin = st.text_input("LinkedIn")
-        with right:
-            email = st.text_input("Email")
+    page_intro("Reseau", "Une bibliotheque de contacts classee par metier, avec les relances et les conversations a piloter.", "Network")
+
+    contacts = contacts_df()
+    active_contacts = contacts[contacts["status"] != "Dormant"] if not contacts.empty else contacts
+    due_contacts = contacts[contacts["days_left"].fillna(99) <= 7] if not contacts.empty else contacts
+    profession_count = int(contacts["profession_group"].nunique()) if not contacts.empty else 0
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        metric_card("Contacts", len(contacts), "dans la bibliotheque")
+    with c2:
+        metric_card("Metiers", profession_count, "categories couvertes")
+    with c3:
+        metric_card("Relances", len(due_contacts), "a faire sous 7 jours")
+    with c4:
+        metric_card("Actifs", len(active_contacts), "hors contacts dormants")
+
+    with st.expander("Ajouter un contact reseau", expanded=contacts.empty):
+        with st.form("contact_form", clear_on_submit=True):
+            left, mid, right = st.columns(3)
+            with left:
+                first_name = st.text_input("Prenom")
+                last_name = st.text_input("Nom")
+                company = st.text_input("Entreprise")
+                role = st.text_input("Poste actuel")
+                profession = st.selectbox("Metier", NETWORK_PROFESSIONS)
+            with mid:
+                seniority = st.selectbox("Seniorite", SENIORITY_LEVELS)
+                target_role = st.text_input("Cible / poste vise")
+                relation = st.text_input("Type de relation", placeholder="Alumni, recruteur, contact LinkedIn...")
+                status = st.selectbox("Statut", NETWORK_STATUSES, index=1)
+                priority = st.selectbox("Priorite", PRIORITIES)
+            with right:
+                channel = st.selectbox("Canal", NETWORK_CHANNELS)
+                source = st.text_input("Source", placeholder="Excel, LinkedIn, evenement...")
+                city = st.text_input("Ville")
+                linkedin = st.text_input("LinkedIn")
+                email = st.text_input("Email / telephone")
             last = st.date_input("Derniere interaction", value=date.today())
             follow = st.date_input("Prochaine relance", value=date.today() + timedelta(days=14))
             associated = st.text_input("Opportunite associee")
-        notes = st.text_area("Notes")
-        submitted = st.form_submit_button("Ajouter le contact", width="stretch")
-    if submitted:
-        if not name:
-            st.error("Ajoute un nom.")
-            return
-        run_sql(
-            "INSERT INTO contacts (name, company, role, relation_type, linkedin, email, last_interaction, next_follow_up, associated_company, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, company, role, relation, linkedin, email, last.isoformat(), follow.isoformat(), associated, notes, datetime.utcnow().isoformat(timespec="seconds")),
-        )
-        st.success("Contact ajoute.")
-        st.rerun()
+            notes = st.text_area("Notes")
+            submitted = st.form_submit_button("Ajouter le contact", width="stretch")
+        if submitted:
+            name = " ".join(part.strip() for part in [first_name, last_name] if part.strip())
+            if not name:
+                st.error("Ajoute au moins un prenom ou un nom.")
+                return
+            run_sql(
+                """
+                INSERT INTO contacts (
+                    name, company, role, profession_group, seniority, target_role, relation_type,
+                    status, source, contact_channel, city, priority, linkedin, email, last_interaction,
+                    next_follow_up, associated_company, notes, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    name,
+                    company,
+                    role,
+                    profession,
+                    seniority,
+                    target_role,
+                    relation,
+                    status,
+                    source,
+                    channel,
+                    city,
+                    priority,
+                    linkedin,
+                    email,
+                    last.isoformat(),
+                    follow.isoformat(),
+                    associated,
+                    notes,
+                    datetime.utcnow().isoformat(timespec="seconds"),
+                ),
+            )
+            st.success("Contact ajoute au reseau.")
+            st.rerun()
 
-    contacts = contacts_df()
+    with st.expander("Importer une fiche Excel ou CSV", expanded=False):
+        uploaded = st.file_uploader("Fichier de networking", type=["xlsx", "xls", "csv"])
+        fallback_profession = st.selectbox("Metier par defaut si non reconnu", ["Auto"] + NETWORK_PROFESSIONS)
+        if uploaded is not None:
+            try:
+                if uploaded.name.lower().endswith(".csv"):
+                    imported_raw = pd.read_csv(uploaded)
+                else:
+                    imported_raw = pd.read_excel(uploaded, header=None)
+                imported = normalize_import_columns(imported_raw)
+                if fallback_profession != "Auto":
+                    imported.loc[imported["profession_group"] == "Other", "profession_group"] = fallback_profession
+                preview = imported[["name", "profession_group", "company", "role", "linkedin", "email", "notes"]].copy()
+                preview.columns = ["Contact", "Metier", "Entreprise", "Poste", "Lien", "Contact direct", "Notes"]
+                st.dataframe(preview.head(25), width="stretch", hide_index=True)
+                if st.button("Importer ces contacts", width="stretch"):
+                    now = datetime.utcnow().isoformat(timespec="seconds")
+                    today_iso = date.today().isoformat()
+                    follow_iso = (date.today() + timedelta(days=14)).isoformat()
+                    rows = [
+                        (
+                            row["name"],
+                            row["company"],
+                            row["role"],
+                            row["profession_group"],
+                            "",
+                            row["role"],
+                            "Import fichier",
+                            "Contacte",
+                            uploaded.name,
+                            "LinkedIn" if row["linkedin"] else "Other",
+                            "",
+                            "Moyenne",
+                            row["linkedin"],
+                            row["email"],
+                            today_iso,
+                            follow_iso,
+                            row["company"],
+                            row["notes"],
+                            now,
+                        )
+                        for _, row in imported.iterrows()
+                    ]
+                    with closing(connect()) as conn:
+                        conn.executemany(
+                            """
+                            INSERT INTO contacts (
+                                name, company, role, profession_group, seniority, target_role, relation_type,
+                                status, source, contact_channel, city, priority, linkedin, email, last_interaction,
+                                next_follow_up, associated_company, notes, created_at
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            """,
+                            rows,
+                        )
+                        conn.commit()
+                    st.success(f"{len(rows)} contacts importes.")
+                    st.rerun()
+            except Exception as exc:
+                st.error(f"Import impossible: {exc}")
+
     if contacts.empty:
-        st.info("Aucun contact sauvegarde.")
+        st.info("Aucun contact sauvegarde. Ajoute ton premier contact pour construire ta bibliotheque reseau.")
         return
-    section_label("Relances relationnelles")
-    urgent = contacts[contacts["days_left"] <= 14].head(8)
-    cols = st.columns(2)
-    for index, (_, row) in enumerate(urgent.iterrows()):
-        with cols[index % 2]:
-            item_card(row["name"], f"{row['company'] or '-'} - {row['role'] or row['relation_type'] or ''}\n{row['notes'] or ''}", [days_text(row["next_follow_up"]), row["associated_company"]])
-            if row["linkedin"]:
-                st.link_button("LinkedIn", row["linkedin"], width="stretch")
 
-    with st.expander("Replanifier une relance"):
+    query_col, profession_col, status_col, priority_col = st.columns([1.4, 1, 1, 1])
+    filtered = filter_rows(contacts, query_col.text_input("Recherche reseau"))
+    profession_filter = profession_col.selectbox("Metier", ["Tous"] + NETWORK_PROFESSIONS)
+    status_filter = status_col.selectbox("Statut", ["Tous"] + NETWORK_STATUSES)
+    priority_filter = priority_col.selectbox("Priorite", ["Toutes"] + PRIORITIES)
+    if profession_filter != "Tous":
+        filtered = filtered[filtered["profession_group"] == profession_filter]
+    if status_filter != "Tous":
+        filtered = filtered[filtered["status"] == status_filter]
+    if priority_filter != "Toutes":
+        filtered = filtered[filtered["priority"] == priority_filter]
+
+    overview_tab, follow_tab, library_tab = st.tabs(["Vue metier", "Relances", "Bibliotheque"])
+    with overview_tab:
+        section_label("Contacts par metier")
+        for profession in NETWORK_PROFESSIONS:
+            group = filtered[filtered["profession_group"] == profession]
+            if group.empty:
+                continue
+            st.write(f"**{profession}**")
+            cols = st.columns(2)
+            for index, (_, row) in enumerate(group.head(6).iterrows()):
+                with cols[index % 2]:
+                    subtitle = f"{row['company'] or '-'} - {row['role'] or row['seniority'] or 'Role a completer'}"
+                    details = row["notes"] or row["target_role"] or row["relation_type"] or ""
+                    item_card(row["name"], f"{subtitle}\n{details}", [row["status"], row["priority"], days_text(row["next_follow_up"])])
+                    if row["linkedin"]:
+                        st.link_button("LinkedIn", row["linkedin"], width="stretch")
+
+    with follow_tab:
+        section_label("Prochaines actions reseau")
+        upcoming = filtered[filtered["days_left"].fillna(99) <= 30].head(12)
+        if upcoming.empty:
+            st.caption("Aucune relance dans les 30 prochains jours avec ces filtres.")
+        cols = st.columns(2)
+        for index, (_, row) in enumerate(upcoming.iterrows()):
+            with cols[index % 2]:
+                item_card(
+                    row["name"],
+                    f"{row['company'] or '-'} - {row['profession_group']}\n{row['notes'] or 'Preparer un message court et personnalise.'}",
+                    [days_text(row["next_follow_up"]), row["status"], row["contact_channel"]],
+                    hot=row["days_left"] <= 3 if pd.notna(row["days_left"]) else False,
+                )
+
+    with library_tab:
+        section_label("Bibliotheque de contacts")
+        table = filtered.copy()
+        table["Relance"] = table["next_follow_up"].apply(format_day)
+        table["Dernier contact"] = table["last_interaction"].apply(format_day)
+        table = table[
+            [
+                "name",
+                "profession_group",
+                "company",
+                "role",
+                "seniority",
+                "status",
+                "priority",
+                "contact_channel",
+                "Relance",
+                "Dernier contact",
+                "associated_company",
+                "linkedin",
+                "notes",
+            ]
+        ]
+        table.columns = [
+            "Contact",
+            "Metier",
+            "Entreprise",
+            "Poste",
+            "Seniorite",
+            "Statut",
+            "Priorite",
+            "Canal",
+            "Relance",
+            "Dernier contact",
+            "Opportunite",
+            "LinkedIn",
+            "Notes",
+        ]
+        st.dataframe(table, width="stretch", hide_index=True)
+
+    with st.expander("Mettre a jour un contact"):
         options = {f"{row['name']} - {row['company'] or 'Contact'}": int(row["id"]) for _, row in contacts.iterrows()}
         selected = st.selectbox("Contact", list(options))
-        next_follow = st.date_input("Nouvelle relance", value=date.today() + timedelta(days=14))
-        if st.button("Replanifier", width="stretch"):
-            run_sql("UPDATE contacts SET next_follow_up = ? WHERE id = ?", (next_follow.isoformat(), options[selected]))
-            st.success("Relance mise a jour.")
+        selected_row = contacts[contacts["id"] == options[selected]].iloc[0]
+        col1, col2, col3 = st.columns(3)
+        new_profession = col1.selectbox("Metier", NETWORK_PROFESSIONS, index=NETWORK_PROFESSIONS.index(selected_row["profession_group"]) if selected_row["profession_group"] in NETWORK_PROFESSIONS else len(NETWORK_PROFESSIONS) - 1)
+        new_status = col2.selectbox("Statut", NETWORK_STATUSES, index=NETWORK_STATUSES.index(selected_row["status"]) if selected_row["status"] in NETWORK_STATUSES else 0)
+        new_priority = col3.selectbox("Priorite", PRIORITIES, index=PRIORITIES.index(selected_row["priority"]) if selected_row["priority"] in PRIORITIES else 1)
+        col4, col5 = st.columns(2)
+        new_last = col4.date_input("Derniere interaction", value=parse_day(selected_row["last_interaction"]) or date.today())
+        next_follow = col5.date_input("Nouvelle relance", value=parse_day(selected_row["next_follow_up"]) or date.today() + timedelta(days=14))
+        new_notes = st.text_area("Notes", value=selected_row["notes"] or "")
+        if st.button("Mettre a jour le contact", width="stretch"):
+            run_sql(
+                """
+                UPDATE contacts
+                SET profession_group = ?, status = ?, priority = ?, last_interaction = ?, next_follow_up = ?, notes = ?
+                WHERE id = ?
+                """,
+                (new_profession, new_status, new_priority, new_last.isoformat(), next_follow.isoformat(), new_notes, options[selected]),
+            )
+            st.success("Contact mis a jour.")
             st.rerun()
 
 
@@ -1278,7 +1626,7 @@ def main() -> None:
         "Accueil": home_page,
         "Pipeline": pipeline_page,
         "Agenda": agenda_page,
-        "Contacts": contacts_page,
+        "Reseau": contacts_page,
         "Ressources": resources_page,
         "Objectifs": goals_page,
         "Analyse": analytics_page,

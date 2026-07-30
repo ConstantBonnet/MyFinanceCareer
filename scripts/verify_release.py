@@ -18,6 +18,16 @@ REQUIRED_FILES = [
     "static/logo.png",
 ]
 REQUIRED_TABLES = ["applications", "resources", "events", "goals", "contacts"]
+REQUIRED_CONTACT_COLUMNS = {
+    "profession_group",
+    "seniority",
+    "target_role",
+    "status",
+    "source",
+    "contact_channel",
+    "city",
+    "priority",
+}
 
 
 def check(condition: bool, message: str) -> None:
@@ -37,6 +47,7 @@ def main() -> None:
     requirements = read("requirements.txt")
     check("streamlit" in requirements, "requirements.txt includes Streamlit")
     check("pandas" in requirements, "requirements.txt includes Pandas")
+    check("openpyxl" in requirements, "requirements.txt includes OpenPyXL for Excel imports")
 
     gitignore = read(".gitignore")
     check("mfc_data.sqlite3" in gitignore, "local SQLite database is ignored")
@@ -57,6 +68,11 @@ def main() -> None:
             for table in REQUIRED_TABLES:
                 count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
                 check(count > 0, f"{table} demo data loads")
+            contact_columns = {row[1] for row in conn.execute("PRAGMA table_info(contacts)").fetchall()}
+            missing_columns = REQUIRED_CONTACT_COLUMNS - contact_columns
+            check(not missing_columns, "contacts table includes network classification fields")
+            profession_count = conn.execute("SELECT COUNT(DISTINCT profession_group) FROM contacts").fetchone()[0]
+            check(profession_count >= 2, "network demo contacts are classified by profession")
 
     print("Release verification passed.")
 
