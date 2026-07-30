@@ -81,7 +81,7 @@ def main() -> None:
     app_source = read("app.py")
     check('st.selectbox("Menu"' not in app_source, "dropdown navigation is removed from the header")
     check("sync_page_nav" not in app_source, "old dropdown navigation callback is removed")
-    check('key=f"nav_{page_key}"' in app_source, "header navigation uses direct page buttons")
+    check("topnav-links" in app_source and "nav-pill" in app_source, "header navigation uses direct horizontal links")
     check("nav-form" not in app_source and "nav-menu" not in app_source, "abandoned HTML navigation is removed")
 
     print("Release verification passed.")

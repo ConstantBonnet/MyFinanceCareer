@@ -9,6 +9,7 @@ from contextlib import closing
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import pandas as pd
 import streamlit as st
@@ -491,8 +492,12 @@ def setup_page() -> None:
             border-bottom: 1px solid rgba(16,24,23,.12);
             margin-bottom: 2px;
         }
-        div.st-key-app_topbar [data-testid="stHorizontalBlock"] {
+        .appbar {
+            display: flex;
             align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            min-height: 42px;
         }
         .appbar-brand {
             display: flex;
@@ -513,11 +518,42 @@ def setup_page() -> None:
             font-weight: 820;
             color: var(--ink);
         }
-        div.st-key-app_topbar div.stButton > button {
+        .topnav-links {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            min-width: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .topnav-links::-webkit-scrollbar {
+            display: none;
+        }
+        .nav-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             min-height: 38px;
-            padding: 0 12px !important;
+            padding: 0 14px;
             white-space: nowrap;
-            border-radius: 8px !important;
+            border-radius: 8px;
+            border: 1px solid var(--line-strong);
+            background: rgba(255,255,255,.72);
+            color: var(--muted) !important;
+            font-size: .92rem;
+            font-weight: 760;
+            text-decoration: none !important;
+        }
+        .nav-pill:hover {
+            border-color: var(--emerald-dark);
+            color: var(--emerald-dark) !important;
+            background: #ffffff;
+        }
+        .nav-pill.is-active {
+            border-color: var(--emerald-dark);
+            background: var(--emerald-dark);
+            color: #ffffff !important;
         }
         div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
             border-radius: 8px !important;
@@ -879,6 +915,15 @@ def setup_page() -> None:
             div.st-key-app_topbar {
                 position: static;
             }
+            .appbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .topnav-links {
+                width: 100%;
+                justify-content: flex-start;
+            }
             .hero-grid {
                 grid-template-columns: 1fr;
                 gap: 12px;
@@ -926,11 +971,6 @@ def setup_page() -> None:
     )
 
 
-def set_current_page(page: str) -> None:
-    st.session_state["current_page"] = page
-    st.query_params["page"] = page
-
-
 def render_header() -> str:
     logo = logo_data_uri()
     logo_html = f'<img src="{logo}" alt="My Finance Career logo">' if logo else ""
@@ -944,30 +984,25 @@ def render_header() -> str:
         st.session_state["_url_page"] = requested_page
 
     current_page = st.session_state["current_page"]
+    nav_html = "".join(
+        f'<a class="nav-pill {"is-active" if page_key == current_page else ""}" href="?page={quote(page_key)}" target="_self">{escape(NAV_LABELS[page_key])}</a>'
+        for page_key in PAGES
+    )
     with st.container(key="app_topbar"):
-        brand_col, nav_col = st.columns([.34, .66], vertical_alignment="center")
-        with brand_col:
-            st.markdown(
-                f"""
+        st.markdown(
+            f"""
+            <div class="appbar">
                 <div class="appbar-brand">
                     {logo_html}
                     <div class="appbar-title">My Finance Career</div>
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
-        with nav_col:
-            nav_cols = st.columns(len(PAGES), gap="small", vertical_alignment="center")
-            for index, page_key in enumerate(PAGES):
-                with nav_cols[index]:
-                    if st.button(
-                        NAV_LABELS[page_key],
-                        key=f"nav_{page_key}",
-                        type="primary" if page_key == current_page else "secondary",
-                        use_container_width=True,
-                    ):
-                        set_current_page(page_key)
-                        st.rerun()
+                <nav class="topnav-links" aria-label="Navigation My Finance Career">
+                    {nav_html}
+                </nav>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     return st.session_state["current_page"]
 
