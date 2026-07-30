@@ -16,8 +16,10 @@ REQUIRED_FILES = [
     ".streamlit/config.toml",
     "docs/PRODUCT_REFERENCE.md",
     "static/logo.png",
+    "static/logo_mark.png",
 ]
-REQUIRED_TABLES = ["applications", "resources", "events", "goals", "contacts"]
+REQUIRED_PAGES = ["Objectifs", "Calendrier", "Bibliotheque", "Reseau"]
+REQUIRED_TABLES = ["resources", "events", "goals", "contacts"]
 REQUIRED_CONTACT_COLUMNS = {
     "profession_group",
     "seniority",
@@ -73,6 +75,12 @@ def main() -> None:
             check(not missing_columns, "contacts table includes network classification fields")
             profession_count = conn.execute("SELECT COUNT(DISTINCT profession_group) FROM contacts").fetchone()[0]
             check(profession_count >= 2, "network demo contacts are classified by profession")
+
+    check(app.PAGES == REQUIRED_PAGES, "navigation is limited to the four core pages")
+    check(app.LOGO_PATH.name == "logo_mark.png", "transparent logo mark is used in the header")
+    app_source = read("app.py")
+    check("on_change=sync_page_nav" in app_source, "navigation menu is wired to page changes")
+    check("nav-form" not in app_source and "nav-menu" not in app_source, "abandoned HTML navigation is removed")
 
     print("Release verification passed.")
 

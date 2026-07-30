@@ -16,7 +16,7 @@ import streamlit as st
 
 APP_TITLE = "My Finance Career"
 DB_PATH = Path("mfc_data.sqlite3")
-LOGO_PATH = Path("static/logo.png")
+LOGO_PATH = Path("static/logo_mark.png")
 
 FIELDS = [
     "Investment Banking",
@@ -27,29 +27,9 @@ FIELDS = [
     "Audit & Transaction Services",
     "Financial Advisory",
 ]
-STATUSES = ["Entreprise cible", "A preparer", "Envoyee", "Tests", "Entretien", "Offre", "Cloturee"]
-STATUS_LABELS = {
-    "Entreprise cible": "Cible",
-    "A preparer": "A preparer",
-    "Envoyee": "Envoyee",
-    "Tests": "Tests",
-    "Entretien": "Entretien",
-    "Offre": "Offre",
-    "Cloturee": "Cloturee",
-}
-STATUS_FLOW = {
-    "Entreprise cible": 0,
-    "A preparer": 1,
-    "Envoyee": 2,
-    "Tests": 3,
-    "Entretien": 4,
-    "Offre": 5,
-    "Cloturee": 6,
-}
 PRIORITIES = ["Haute", "Moyenne", "Basse"]
 PRIORITY_WEIGHT = {"Haute": 3, "Moyenne": 2, "Basse": 1}
-CONTRACTS = ["Stage", "Alternance", "Graduate program", "CDI", "VIE"]
-RESOURCE_CATEGORIES = ["CV", "Lettre", "Modele", "Guide", "Cours", "Preparation entretien", "Site utile"]
+RESOURCE_CATEGORIES = ["CV", "Lettre de motivation", "Modele", "Preparation technique", "Cours", "Document Drive", "Site utile"]
 EVENT_TYPES = ["Deadline", "Entretien", "Test", "Networking", "Relance", "Tache"]
 GOAL_STATUSES = ["En cours", "En pause", "Termine"]
 NETWORK_PROFESSIONS = [
@@ -69,8 +49,8 @@ NETWORK_PROFESSIONS = [
 NETWORK_STATUSES = ["A contacter", "Contacte", "A relancer", "Echange planifie", "Rencontre", "A remercier", "Dormant"]
 NETWORK_CHANNELS = ["LinkedIn", "Email", "Call", "Coffee chat", "Event", "Alumni platform", "Referral", "Other"]
 SENIORITY_LEVELS = ["Student", "Intern", "Analyst", "Associate", "Manager", "VP", "Director", "Partner", "Recruiter", "Other"]
-TABLES = ["applications", "resources", "events", "goals", "contacts"]
-PAGES = ["Accueil", "Pipeline", "Agenda", "Reseau", "Ressources", "Objectifs", "Analyse", "Donnees"]
+TABLES = ["resources", "events", "goals", "contacts"]
+PAGES = ["Objectifs", "Calendrier", "Bibliotheque", "Reseau"]
 MONTH_NAMES = [
     "",
     "Janvier",
@@ -116,26 +96,6 @@ def init_db() -> None:
     with closing(connect()) as conn:
         conn.executescript(
             """
-            CREATE TABLE IF NOT EXISTS applications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                company TEXT NOT NULL,
-                role TEXT NOT NULL,
-                field TEXT NOT NULL,
-                location TEXT,
-                contract_type TEXT,
-                status TEXT NOT NULL,
-                priority TEXT NOT NULL,
-                deadline TEXT,
-                sent_date TEXT,
-                next_action TEXT,
-                follow_up_date TEXT,
-                offer_link TEXT,
-                cv_link TEXT,
-                cover_letter_link TEXT,
-                contacts TEXT,
-                notes TEXT,
-                created_at TEXT NOT NULL
-            );
             CREATE TABLE IF NOT EXISTS resources (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
@@ -162,6 +122,7 @@ def init_db() -> None:
                 title TEXT NOT NULL,
                 field TEXT,
                 due_date TEXT,
+                priority TEXT DEFAULT 'Moyenne',
                 progress INTEGER NOT NULL,
                 status TEXT NOT NULL,
                 next_step TEXT,
@@ -200,6 +161,24 @@ def init_db() -> None:
         ensure_column(conn, "contacts", "contact_channel", "TEXT")
         ensure_column(conn, "contacts", "city", "TEXT")
         ensure_column(conn, "contacts", "priority", "TEXT DEFAULT 'Moyenne'")
+        ensure_column(conn, "goals", "priority", "TEXT DEFAULT 'Moyenne'")
+        conn.execute(
+            """
+            UPDATE goals
+            SET title = 'Finaliser le dossier M&A',
+                next_step = 'Relire CV, lettre et fiche technique'
+            WHERE title = 'Obtenir un stage M&A a Paris'
+              AND next_step = 'Envoyer 5 candidatures ciblees'
+            """
+        )
+        conn.execute(
+            """
+            UPDATE contacts
+            SET notes = 'Conseils utiles sur les messages courts, le one pager et les prises de contact ciblees.'
+            WHERE name = 'Luigi Cazalis'
+              AND notes = 'Conseils utiles sur les messages courts, le one pager et les candidatures spontanees.'
+            """
+        )
         conn.commit()
 
 
@@ -209,56 +188,18 @@ def table_is_empty(table: str) -> bool:
 
 
 def seed_demo() -> None:
-    if not table_is_empty("applications"):
+    if not table_is_empty("goals"):
         return
     today = date.today()
     now = datetime.utcnow().isoformat(timespec="seconds")
-    applications = [
-        ("Rothschild & Co", "M&A Intern - Paris", "Investment Banking", "Paris", "Stage", "Entretien", "Haute", 12, -8, "Preparer les questions techniques et relire les deals recents", 2, "Claire Martin"),
-        ("Ardian", "Private Equity Analyst Intern", "Private Equity", "Paris", "Stage", "A preparer", "Haute", 7, None, "Adapter la lettre et trouver deux alumni", 1, ""),
-        ("Amundi", "Portfolio Assistant", "Asset Management", "Paris", "Stage", "Envoyee", "Moyenne", 20, -3, "Relancer si pas de reponse", 6, ""),
-        ("BNP Paribas CIB", "Global Markets Summer Intern", "Markets", "London", "Stage", "Tests", "Moyenne", 3, -5, "Finaliser le test numerique", 0, ""),
-        ("PwC", "Transaction Services Intern", "Audit & Transaction Services", "Paris", "Stage", "Offre", "Basse", -4, -25, "Comparer avec les autres opportunites", 4, "Marc Dubois"),
-    ]
     with closing(connect()) as conn:
-        conn.executemany(
-            """
-            INSERT INTO applications (
-                company, role, field, location, contract_type, status, priority,
-                deadline, sent_date, next_action, follow_up_date, offer_link,
-                cv_link, cover_letter_link, contacts, notes, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            [
-                (
-                    company,
-                    role,
-                    field,
-                    location,
-                    contract,
-                    status,
-                    priority,
-                    (today + timedelta(days=deadline)).isoformat(),
-                    (today + timedelta(days=sent)).isoformat() if sent is not None else None,
-                    action,
-                    (today + timedelta(days=follow)).isoformat(),
-                    "https://example.com",
-                    "https://drive.google.com/",
-                    "https://drive.google.com/",
-                    linked_contacts,
-                    "Donnee de demonstration orientee finance.",
-                    now,
-                )
-                for company, role, field, location, contract, status, priority, deadline, sent, action, follow, linked_contacts in applications
-            ],
-        )
         conn.executemany(
             "INSERT INTO resources (title, category, field, tags, link, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
             [
                 ("CV Finance - version M&A", "CV", "Investment Banking", "cv, m&a, paris", "https://drive.google.com/", "Version orientee transaction, valorisation et experience deal.", now),
-                ("Questions techniques finance", "Preparation entretien", "Investment Banking", "valuation, accounting, technicals", "https://www.wallstreetprep.com/", "Support de revision pour entretiens M&A et PE.", now),
+                ("Questions techniques finance", "Preparation technique", "Investment Banking", "valuation, accounting, technicals", "https://www.wallstreetprep.com/", "Support de revision pour entretiens M&A et PE.", now),
                 ("Liste alumni finance", "Site utile", "Financial Advisory", "networking, alumni", "https://www.linkedin.com/", "Base de travail pour les prises de contact ciblees.", now),
-                ("Modele de lettre PE", "Modele", "Private Equity", "cover letter, pe", "https://drive.google.com/", "Structure courte pour candidatures private equity.", now),
+                ("Modele de lettre PE", "Lettre de motivation", "Private Equity", "cover letter, pe", "https://drive.google.com/", "Structure courte pour dossiers private equity.", now),
             ],
         )
         conn.executemany(
@@ -270,10 +211,10 @@ def seed_demo() -> None:
             ],
         )
         conn.executemany(
-            "INSERT INTO goals (title, field, due_date, progress, status, next_step, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO goals (title, field, due_date, priority, progress, status, next_step, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
-                ("Obtenir un stage M&A a Paris", "Investment Banking", (today + timedelta(days=60)).isoformat(), 45, "En cours", "Envoyer 5 candidatures ciblees", "Priorite aux boutiques et banques avec fort dealflow.", now),
-                ("Contacter 10 alumni en finance", "Financial Advisory", (today + timedelta(days=21)).isoformat(), 30, "En cours", "Identifier 3 anciens en PE", "Suivre les reponses dans Reseau.", now),
+                ("Finaliser le dossier M&A", "Investment Banking", (today + timedelta(days=10)).isoformat(), "Haute", 45, "En cours", "Relire CV, lettre et fiche technique", "Priorite aux boutiques et banques avec fort dealflow.", now),
+                ("Contacter 10 alumni en finance", "Financial Advisory", (today + timedelta(days=21)).isoformat(), "Moyenne", 30, "En cours", "Identifier 3 anciens en PE", "Suivre les reponses dans Reseau.", now),
             ],
         )
         conn.executemany(
@@ -287,14 +228,10 @@ def seed_demo() -> None:
             [
                 ("Claire Martin", "Rothschild & Co", "Associate", "M&A / Investment Banking", "Associate", "M&A Intern", "Alumni", "A relancer", "Alumni school", "LinkedIn", "Paris", "Haute", "https://www.linkedin.com/", "", (today - timedelta(days=2)).isoformat(), (today + timedelta(days=5)).isoformat(), "Rothschild & Co", "Conseils sur les entretiens techniques.", now),
                 ("Marc Dubois", "PwC", "Manager TS", "Transaction Services", "Manager", "TS Intern", "Recruteur", "Echange planifie", "Event", "Coffee chat", "Paris", "Moyenne", "https://www.linkedin.com/", "", (today - timedelta(days=6)).isoformat(), (today + timedelta(days=4)).isoformat(), "PwC", "Contact principal pour l'offre TS.", now),
-                ("Luigi Cazalis", "Clairfield", "M&A Intern", "M&A / Investment Banking", "Intern", "Boutique M&A", "Contact LinkedIn", "Contacte", "LinkedIn search", "Call", "Paris", "Haute", "https://www.linkedin.com/", "", (today - timedelta(days=8)).isoformat(), (today + timedelta(days=9)).isoformat(), "Clairfield", "Conseils utiles sur les messages courts, le one pager et les candidatures spontanees.", now),
+                ("Luigi Cazalis", "Clairfield", "M&A Intern", "M&A / Investment Banking", "Intern", "Boutique M&A", "Contact LinkedIn", "Contacte", "LinkedIn search", "Call", "Paris", "Haute", "https://www.linkedin.com/", "", (today - timedelta(days=8)).isoformat(), (today + timedelta(days=9)).isoformat(), "Clairfield", "Conseils utiles sur les messages courts, le one pager et les prises de contact ciblees.", now),
             ],
         )
         conn.commit()
-
-
-def applications_df() -> pd.DataFrame:
-    return enrich_applications(read_df("SELECT * FROM applications ORDER BY created_at DESC, id DESC"))
 
 
 def resources_df() -> pd.DataFrame:
@@ -311,7 +248,18 @@ def events_df() -> pd.DataFrame:
 
 
 def goals_df() -> pd.DataFrame:
-    return read_df("SELECT * FROM goals ORDER BY due_date ASC, id DESC")
+    data = read_df("SELECT * FROM goals ORDER BY due_date ASC, id DESC")
+    if data.empty:
+        return data
+    data = data.copy()
+    if "priority" not in data.columns:
+        data["priority"] = "Moyenne"
+    data["priority"] = data["priority"].fillna("Moyenne").replace("", "Moyenne")
+    data["due_day"] = data["due_date"].apply(parse_day)
+    data["days_left"] = data["due_day"].apply(lambda item: (item - date.today()).days if item else None)
+    data["priority_score"] = data["priority"].map(PRIORITY_WEIGHT).fillna(2).astype(int)
+    data["status_score"] = data["status"].map({"En cours": 0, "En pause": 1, "Termine": 2}).fillna(1).astype(int)
+    return data.sort_values(["status_score", "priority_score", "days_left", "id"], ascending=[True, False, True, False])
 
 
 def contacts_df() -> pd.DataFrame:
@@ -457,43 +405,6 @@ def days_text(value: Any) -> str:
     return f"Dans {delta} j"
 
 
-def enrich_applications(data: pd.DataFrame) -> pd.DataFrame:
-    if data.empty:
-        return data
-    data = data.copy()
-    data["deadline_day"] = data["deadline"].apply(parse_day)
-    data["follow_day"] = data["follow_up_date"].apply(parse_day)
-    data["days_to_follow"] = data["follow_day"].apply(lambda item: (item - date.today()).days if item else 99)
-    data["days_to_deadline"] = data["deadline_day"].apply(lambda item: (item - date.today()).days if item else 99)
-    data["stage_score"] = data["status"].map(STATUS_FLOW).fillna(0).astype(int)
-    data["priority_score"] = data["priority"].map(PRIORITY_WEIGHT).fillna(1).astype(int)
-    data["action_score"] = data.apply(application_score, axis=1)
-    return data.sort_values(["action_score", "priority_score", "stage_score"], ascending=[False, False, False])
-
-
-def application_score(row: pd.Series) -> int:
-    score = int(row.get("priority_score", 1)) * 18 + int(row.get("stage_score", 0)) * 6
-    follow = row.get("days_to_follow", 99)
-    deadline = row.get("days_to_deadline", 99)
-    if follow <= 0:
-        score += 40
-    elif follow <= 3:
-        score += 25
-    elif follow <= 7:
-        score += 12
-    if deadline <= 0:
-        score += 35
-    elif deadline <= 3:
-        score += 22
-    elif deadline <= 7:
-        score += 10
-    if row.get("status") in {"Offre", "Entretien", "Tests"}:
-        score += 12
-    if row.get("status") == "Cloturee":
-        score = 0
-    return score
-
-
 def filter_rows(data: pd.DataFrame, query: str) -> pd.DataFrame:
     if data.empty or not query:
         return data
@@ -584,22 +495,17 @@ def setup_page() -> None:
             gap: 10px;
         }
         .appbar-brand img {
-            width: 34px;
-            height: 34px;
-            object-fit: cover;
-            border-radius: 9px;
-            background: #0b1714;
-            box-shadow: 0 10px 20px rgba(5,115,95,.14);
+            width: 52px;
+            height: 36px;
+            object-fit: contain;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
         }
         .appbar-title {
             font-size: 1.02rem;
             font-weight: 820;
             color: var(--ink);
-        }
-        .appbar-subtitle {
-            color: var(--muted);
-            font-size: .78rem;
-            margin-top: 2px;
         }
         div[data-testid="stSelectbox"] [data-baseweb="select"] > div {
             border-radius: 8px !important;
@@ -610,9 +516,6 @@ def setup_page() -> None:
         div[data-testid="stSelectbox"] {
             margin-top: 0 !important;
             margin-bottom: 0 !important;
-        }
-        div[data-testid="stSelectbox"] label {
-            display: none !important;
         }
         .appbar-rule {
             height: 1px;
@@ -969,9 +872,6 @@ def setup_page() -> None:
             .appbar {
                 position: static;
             }
-            .appbar-subtitle {
-                display: none;
-            }
             .hero-grid {
                 grid-template-columns: 1fr;
                 gap: 12px;
@@ -1009,8 +909,8 @@ def setup_page() -> None:
                 min-width: 0;
             }
             .appbar-brand img {
-                width: 34px;
-                height: 34px;
+                width: 46px;
+                height: 32px;
             }
         }
         </style>
@@ -1019,32 +919,37 @@ def setup_page() -> None:
     )
 
 
+def sync_page_nav() -> None:
+    st.query_params["page"] = st.session_state["page_nav"]
+
+
 def render_header() -> str:
     logo = logo_data_uri()
     logo_html = f'<img src="{logo}" alt="My Finance Career logo">' if logo else ""
-    requested_page = st.query_params.get("page", "Accueil")
-    default_index = PAGES.index(requested_page) if requested_page in PAGES else 0
-    if "page_nav" not in st.session_state or st.session_state.get("_url_page") != requested_page:
-        st.session_state["page_nav"] = PAGES[default_index]
+    requested_page = st.query_params.get("page", PAGES[0])
+    if requested_page not in PAGES:
+        requested_page = PAGES[0]
+        st.query_params["page"] = requested_page
+
+    if "page_nav" not in st.session_state or st.session_state["page_nav"] not in PAGES or st.session_state.get("_url_page") != requested_page:
+        st.session_state["page_nav"] = requested_page
         st.session_state["_url_page"] = requested_page
 
-    left, right = st.columns([1, .28], vertical_alignment="center")
+    left, right = st.columns([.72, .28], vertical_alignment="center")
     with left:
         st.markdown(
             f"""
             <div class="appbar">
                 <div class="appbar-brand">
-                {logo_html}
-                    <div>
-                        <div class="appbar-title">My Finance Career</div>
-                    </div>
+                    {logo_html}
+                    <div class="appbar-title">My Finance Career</div>
                 </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
     with right:
-        page = st.selectbox("Aller a", PAGES, index=default_index, label_visibility="collapsed", key="page_nav")
+        page = st.selectbox("Menu", PAGES, index=PAGES.index(requested_page), key="page_nav", label_visibility="collapsed", on_change=sync_page_nav)
     st.markdown('<div class="appbar-rule"></div>', unsafe_allow_html=True)
     if st.query_params.get("page") != page:
         st.query_params["page"] = page
@@ -1100,175 +1005,6 @@ def item_card(title: str, body: str, chips: list[Any] | None = None, hot: bool =
     )
 
 
-def stage_rows(apps: pd.DataFrame) -> None:
-    total = max(len(apps), 1)
-    for status in STATUSES:
-        count = int((apps["status"] == status).sum()) if not apps.empty else 0
-        width = int((count / total) * 100)
-        st.markdown(
-            f"""
-            <div class="stage-row">
-                <div class="muted">{escape(STATUS_LABELS[status])}</div>
-                <div class="stage-track"><div class="stage-fill" style="width:{width}%"></div></div>
-                <div class="muted">{count}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-
-def brief_panel(apps: pd.DataFrame, events: pd.DataFrame, contacts: pd.DataFrame) -> None:
-    focus_apps = apps[apps["status"] != "Cloturee"].head(3) if not apps.empty else apps
-    focus_events = events[(events["done"] == 0) & (events["days_left"] <= 7)].head(2) if not events.empty else events
-    due_contacts = contacts[contacts["days_left"] <= 7].head(2) if not contacts.empty else contacts
-    rows: list[tuple[str, str, str]] = []
-    for _, row in focus_apps.iterrows():
-        rows.append(("Candidature", f"{row['company']} - {row['next_action'] or 'Action a definir'}", days_text(row["follow_up_date"])))
-    for _, row in focus_events.iterrows():
-        rows.append((row["event_type"], f"{row['title']} - {row['related_company'] or 'Planning'}", days_text(row["event_date"])))
-    for _, row in due_contacts.iterrows():
-        rows.append(("Contact", f"{row['name']} - {row['company'] or 'Reseau'}", days_text(row["next_follow_up"])))
-    if not rows:
-        rows.append(("Focus", "Aucune action critique aujourd'hui. Tu peux avancer les opportunites de fond.", "OK"))
-    rows_html = "".join(
-        f"""
-        <div class="brief-row">
-            <div>
-                <div class="brief-kicker">{escape(kind)}</div>
-                <div>{escape(label)}</div>
-            </div>
-            <div class="brief-date">{escape(timing)}</div>
-        </div>
-        """
-        for kind, label, timing in rows[:3]
-    )
-    st.markdown(
-        f"""
-        <div class="focus-panel">
-            <div class="eyebrow" style="color:#9ff5dd;">Priorites</div>
-            <h2>Ce qui merite ton attention</h2>
-            <div class="muted">Une vue courte pour savoir quoi faire maintenant, pas un tableau de plus.</div>
-            <div style="height:10px"></div>
-            {rows_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def day_delta(value: Any, fallback: int = 99) -> int:
-    parsed = parse_day(value)
-    return (parsed - date.today()).days if parsed else fallback
-
-
-def dashboard_todos(apps: pd.DataFrame, events: pd.DataFrame, contacts: pd.DataFrame, goals: pd.DataFrame) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    if not apps.empty:
-        for _, row in apps[apps["status"] != "Cloturee"].iterrows():
-            rows.append(
-                {
-                    "kind": "Candidature",
-                    "title": f"{row['company']} - {row['role']}",
-                    "subtitle": row["next_action"] or "Definir la prochaine action",
-                    "date": row["follow_up_date"],
-                    "score": row.get("action_score", 0),
-                }
-            )
-    if not events.empty:
-        for _, row in events[events["done"] == 0].iterrows():
-            rows.append(
-                {
-                    "kind": row["event_type"],
-                    "title": row["title"],
-                    "subtitle": row["related_company"] or row["notes"] or "Agenda",
-                    "date": row["event_date"],
-                    "score": 120 - day_delta(row["event_date"]),
-                }
-            )
-    if not contacts.empty:
-        active_contacts = contacts[contacts["status"] != "Dormant"] if "status" in contacts.columns else contacts
-        for _, row in active_contacts.iterrows():
-            rows.append(
-                {
-                    "kind": "Reseau",
-                    "title": row["name"],
-                    "subtitle": f"{row['company'] or 'Contact'} - {row['status'] or 'A suivre'}",
-                    "date": row["next_follow_up"],
-                    "score": row.get("network_score", 0),
-                }
-            )
-    if not goals.empty:
-        active_goals = goals[goals["status"] != "Termine"]
-        for _, row in active_goals.iterrows():
-            rows.append(
-                {
-                    "kind": "Objectif",
-                    "title": row["title"],
-                    "subtitle": row["next_step"] or "Definir la prochaine etape",
-                    "date": row["due_date"],
-                    "score": 90 - day_delta(row["due_date"]),
-                }
-            )
-    return sorted(rows, key=lambda item: (item["score"], -day_delta(item["date"])), reverse=True)[:8]
-
-
-def render_todo_panel(rows: list[dict[str, Any]]) -> None:
-    if not rows:
-        st.info("Aucune action urgente. Ajoute des candidatures, objectifs ou rappels pour remplir le tableau de bord.")
-        return
-    rows_html = "".join(
-        f'<div class="todo-row">'
-        f'<div class="todo-type">{escape(row["kind"])}</div>'
-        f'<div><div class="todo-main">{escape(row["title"])}</div>'
-        f'<div class="todo-sub">{escape(row["subtitle"])}</div></div>'
-        f'<div class="todo-date">{escape(days_text(row["date"]))}</div>'
-        f'</div>'
-        for row in rows
-    )
-    st.markdown(f'<div class="panel">{rows_html}</div>', unsafe_allow_html=True)
-
-
-def render_goal_panel(goals: pd.DataFrame) -> None:
-    active_goals = goals[goals["status"] != "Termine"].head(5) if not goals.empty else goals
-    if active_goals.empty:
-        st.info("Aucun objectif actif pour le moment.")
-        return
-    rows_html = ""
-    for _, row in active_goals.iterrows():
-        progress = max(0, min(100, int(row["progress"] or 0)))
-        rows_html += (
-            f'<div class="goal-row">'
-            f'<div class="goal-top"><div>{escape(row["title"])}</div><div>{progress}%</div></div>'
-            f'<div class="goal-track"><div class="goal-fill" style="width:{progress}%"></div></div>'
-            f'<div class="todo-sub">{escape(row["next_step"] or "Prochaine etape a definir")} - {escape(days_text(row["due_date"]))}</div>'
-            f'</div>'
-        )
-    st.markdown(f'<div class="panel">{rows_html}</div>', unsafe_allow_html=True)
-
-
-def render_stats_strip(apps: pd.DataFrame, events: pd.DataFrame, contacts: pd.DataFrame, goals: pd.DataFrame) -> None:
-    sent = int((apps["status"] != "Entreprise cible").sum()) if not apps.empty else 0
-    week_actions = 0
-    if not events.empty:
-        week_actions += int(((events["done"] == 0) & (events["days_left"] <= 7)).sum())
-    if not contacts.empty:
-        week_actions += int((contacts["days_left"].fillna(99) <= 7).sum())
-    goal_progress = f"{int(goals['progress'].mean())}%" if not goals.empty else "0%"
-    fields = int(apps["field"].nunique()) if not apps.empty else 0
-    st.markdown(
-        f"""
-        <div class="stat-strip">
-            <div class="mini-stat"><div class="mini-stat-value">{sent}</div><div class="mini-stat-label">candidatures envoyees ou avancees</div></div>
-            <div class="mini-stat"><div class="mini-stat-value">{week_actions}</div><div class="mini-stat-label">rappels a traiter cette semaine</div></div>
-            <div class="mini-stat"><div class="mini-stat-value">{escape(goal_progress)}</div><div class="mini-stat-label">avancement moyen des objectifs</div></div>
-        </div>
-        <div style="height:10px"></div>
-        <div class="mini-stat"><div class="mini-stat-value">{fields}</div><div class="mini-stat-label">domaines finance actifs dans le pipeline</div></div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
 def next_month(month_start: date, offset: int) -> date:
     month = month_start.month - 1 + offset
     year = month_start.year + month // 12
@@ -1276,7 +1012,7 @@ def next_month(month_start: date, offset: int) -> date:
     return date(year, month, 1)
 
 
-def agenda_items(events: pd.DataFrame, apps: pd.DataFrame, contacts: pd.DataFrame) -> list[dict[str, Any]]:
+def agenda_items(events: pd.DataFrame, contacts: pd.DataFrame, goals: pd.DataFrame) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     if not events.empty:
         for _, row in events.iterrows():
@@ -1293,34 +1029,6 @@ def agenda_items(events: pd.DataFrame, apps: pd.DataFrame, contacts: pd.DataFram
                         "source": "Agenda",
                     }
                 )
-    if not apps.empty:
-        for _, row in apps[apps["status"] != "Cloturee"].iterrows():
-            deadline = parse_day(row["deadline"])
-            follow = parse_day(row["follow_up_date"])
-            if deadline:
-                rows.append(
-                    {
-                        "day": deadline,
-                        "title": f"{row['company']} - deadline",
-                        "kind": "Deadline",
-                        "priority": row["priority"],
-                        "notes": row["role"],
-                        "done": False,
-                        "source": "Pipeline",
-                    }
-                )
-            if follow:
-                rows.append(
-                    {
-                        "day": follow,
-                        "title": f"{row['company']} - relance",
-                        "kind": "Relance",
-                        "priority": row["priority"],
-                        "notes": row["next_action"] or row["role"],
-                        "done": False,
-                        "source": "Pipeline",
-                    }
-                )
     if not contacts.empty:
         active_contacts = contacts[contacts["status"] != "Dormant"] if "status" in contacts.columns else contacts
         for _, row in active_contacts.iterrows():
@@ -1335,6 +1043,22 @@ def agenda_items(events: pd.DataFrame, apps: pd.DataFrame, contacts: pd.DataFram
                         "notes": row["company"] or row.get("profession_group", ""),
                         "done": False,
                         "source": "Reseau",
+                    }
+                )
+    if not goals.empty:
+        active_goals = goals[goals["status"] != "Termine"] if "status" in goals.columns else goals
+        for _, row in active_goals.iterrows():
+            due = parse_day(row["due_date"])
+            if due:
+                rows.append(
+                    {
+                        "day": due,
+                        "title": row["title"],
+                        "kind": "Objectif",
+                        "priority": row.get("priority", "Moyenne"),
+                        "notes": row["next_step"] or row["notes"] or "Objectif a suivre",
+                        "done": False,
+                        "source": "Objectifs",
                     }
                 )
     return sorted(rows, key=lambda item: (item["day"], PRIORITY_WEIGHT.get(item["priority"], 2)), reverse=False)
@@ -1387,51 +1111,6 @@ def render_calendar(month_start: date, items: list[dict[str, Any]]) -> None:
     )
 
 
-def application_form(prefix: str = "application") -> None:
-    with st.form(f"{prefix}_form", clear_on_submit=True):
-        left, right = st.columns(2)
-        with left:
-            company = st.text_input("Entreprise")
-            role = st.text_input("Poste")
-            field = st.selectbox("Domaine", FIELDS)
-            location = st.text_input("Localisation", value="Paris")
-            contract = st.selectbox("Contrat", CONTRACTS)
-            priority = st.selectbox("Priorite", PRIORITIES)
-        with right:
-            status = st.selectbox("Statut", STATUSES, format_func=lambda item: STATUS_LABELS.get(item, item))
-            deadline = st.date_input("Date limite", value=date.today() + timedelta(days=14))
-            sent_enabled = st.checkbox("Candidature deja envoyee")
-            sent_date = st.date_input("Date d'envoi", value=date.today(), disabled=not sent_enabled)
-            follow_up = st.date_input("Prochaine action", value=date.today() + timedelta(days=7))
-            offer_link = st.text_input("Lien vers l'offre")
-        next_action = st.text_input("Action concrete a faire")
-        cv_link = st.text_input("Lien CV utilise")
-        cover_link = st.text_input("Lien lettre utilise")
-        linked_contacts = st.text_input("Contacts associes")
-        notes = st.text_area("Notes de preparation")
-        submitted = st.form_submit_button("Ajouter au pipeline", width="stretch")
-    if submitted:
-        if not company or not role:
-            st.error("Ajoute au minimum une entreprise et un poste.")
-            return
-        run_sql(
-            """
-            INSERT INTO applications (
-                company, role, field, location, contract_type, status, priority,
-                deadline, sent_date, next_action, follow_up_date, offer_link,
-                cv_link, cover_letter_link, contacts, notes, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                company, role, field, location, contract, status, priority, deadline.isoformat(),
-                sent_date.isoformat() if sent_enabled else None, next_action, follow_up.isoformat(),
-                offer_link, cv_link, cover_link, linked_contacts, notes, datetime.utcnow().isoformat(timespec="seconds"),
-            ),
-        )
-        st.success("Candidature ajoutee au pipeline.")
-        st.rerun()
-
-
 def resource_form(prefix: str = "resource") -> None:
     with st.form(f"{prefix}_form", clear_on_submit=True):
         left, right = st.columns(2)
@@ -1441,7 +1120,7 @@ def resource_form(prefix: str = "resource") -> None:
             field = st.selectbox("Domaine associe", [""] + FIELDS)
         with right:
             tags = st.text_input("Tags")
-            link = st.text_input("Lien")
+            link = st.text_input("Lien externe", placeholder="https://drive.google.com/...")
         description = st.text_area("Pourquoi c'est utile")
         submitted = st.form_submit_button("Ajouter la ressource", width="stretch")
     if submitted:
@@ -1481,134 +1160,10 @@ def event_form(prefix: str = "event") -> None:
         st.rerun()
 
 
-def home_page() -> None:
-    apps, events, goals, contacts = applications_df(), events_df(), goals_df(), contacts_df()
-    active_apps = apps[apps["status"] != "Cloturee"] if not apps.empty else apps
-    sent_base = active_apps[active_apps["status"] != "Entreprise cible"] if not active_apps.empty else active_apps
-    interviews = int(active_apps["status"].isin(["Tests", "Entretien", "Offre"]).sum()) if not active_apps.empty else 0
-    overdue = int((active_apps["days_to_follow"] < 0).sum()) if not active_apps.empty else 0
-    upcoming_events = events[(events["done"] == 0) & (events["days_left"] >= 0) & (events["days_left"] <= 14)] if not events.empty else events
-    conversion = f"{interviews / max(len(sent_base), 1):.0%}" if not active_apps.empty else "0%"
-
-    st.markdown('<div class="metric-grid">', unsafe_allow_html=True)
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        metric_card("Pipeline actif", len(active_apps), "hors candidatures cloturees")
-    with c2:
-        metric_card("Entretiens & tests", interviews, "opportunites chaudes")
-    with c3:
-        metric_card("Taux de traction", conversion, "tests + entretiens + offres")
-    with c4:
-        metric_card("Retards", overdue, "relances depassees")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    dashboard_left, dashboard_right = st.columns([1.12, .88])
-    with dashboard_left:
-        section_label("To-do prioritaire")
-        render_todo_panel(dashboard_todos(active_apps, events, contacts, goals))
-    with dashboard_right:
-        section_label("Objectifs et statistiques")
-        render_goal_panel(goals)
-        render_stats_strip(active_apps, events, contacts, goals)
-
-    left, middle, right = st.columns([1.05, 1, .95])
-    with left:
-        section_label("Pipeline")
-        stage_rows(active_apps)
-    with middle:
-        section_label("Opportunites a pousser")
-        if active_apps.empty:
-            st.info("Ajoute une premiere candidature pour construire ton cockpit.")
-        for _, row in active_apps.head(4).iterrows():
-            hot = row["days_to_follow"] <= 1 or row["days_to_deadline"] <= 3
-            item_card(
-                f"{row['company']} - {row['role']}",
-                row["next_action"] or "Definir la prochaine action.",
-                [STATUS_LABELS.get(row["status"], row["status"]), row["priority"], days_text(row["follow_up_date"])],
-                hot=hot,
-            )
-    with right:
-        section_label("Prochaines echeances")
-        if upcoming_events.empty:
-            st.info("Aucune echeance dans les 14 prochains jours.")
-        for _, row in upcoming_events.head(4).iterrows():
-            item_card(row["title"], row["notes"] or row["related_company"] or "", [row["event_type"], days_text(row["event_date"]), row["priority"]])
-
-    section_label("Ajout rapide")
-    a, b, c = st.columns(3)
-    with a.expander("Nouvelle candidature"):
-        application_form("home_application")
-    with b.expander("Nouvel evenement"):
-        event_form("home_event")
-    with c.expander("Nouvelle ressource"):
-        resource_form("home_resource")
-
-
-def pipeline_page() -> None:
-    page_intro("Pipeline", "Prioriser, filtrer et faire avancer chaque candidature avec une action suivante claire.", "Candidatures")
-    with st.expander("Ajouter une candidature", expanded=False):
-        application_form("main_application")
-
-    apps = applications_df()
-    if apps.empty:
-        st.info("Aucune candidature pour le moment.")
-        return
-
-    search, field_choice, priority_choice, status_choice = st.columns([1.35, 1, .9, .9])
-    query = search.text_input("Recherche")
-    field = field_choice.selectbox("Domaine", ["Tous"] + FIELDS)
-    priority = priority_choice.selectbox("Priorite", ["Toutes"] + PRIORITIES)
-    status = status_choice.selectbox("Statut", ["Tous"] + STATUSES, format_func=lambda item: STATUS_LABELS.get(item, item))
-    filtered = filter_rows(apps, query)
-    if field != "Tous":
-        filtered = filtered[filtered["field"] == field]
-    if priority != "Toutes":
-        filtered = filtered[filtered["priority"] == priority]
-    if status != "Tous":
-        filtered = filtered[filtered["status"] == status]
-
-    left, right = st.columns([.85, 1.15])
-    with left:
-        section_label("Focus list")
-        for _, row in filtered.head(6).iterrows():
-            hot = row["days_to_follow"] <= 1 or row["days_to_deadline"] <= 3
-            item_card(
-                f"{row['company']}",
-                f"{row['role']}\n{row['next_action'] or 'Action a definir'}",
-                [STATUS_LABELS.get(row["status"], row["status"]), row["field"], days_text(row["follow_up_date"])],
-                hot=hot,
-            )
-    with right:
-        section_label("Vue exploitable")
-        table = filtered.copy()
-        table["Statut"] = table["status"].map(STATUS_LABELS)
-        table["Relance"] = table["follow_up_date"].apply(format_day)
-        table["Deadline"] = table["deadline"].apply(format_day)
-        table = table[["company", "role", "field", "priority", "Statut", "Relance", "Deadline", "next_action"]]
-        table.columns = ["Entreprise", "Poste", "Domaine", "Priorite", "Statut", "Relance", "Deadline", "Action"]
-        st.dataframe(table, width="stretch", hide_index=True)
-
-    with st.expander("Faire avancer une candidature", expanded=False):
-        options = {f"{row['company']} - {row['role']}": int(row["id"]) for _, row in apps.iterrows()}
-        selected = st.selectbox("Candidature", list(options))
-        col1, col2, col3 = st.columns(3)
-        new_status = col1.selectbox("Nouveau statut", STATUSES, format_func=lambda item: STATUS_LABELS.get(item, item))
-        new_priority = col2.selectbox("Priorite", PRIORITIES)
-        new_follow = col3.date_input("Prochaine action", value=date.today() + timedelta(days=7))
-        new_action = st.text_input("Action suivante")
-        if st.button("Mettre a jour", width="stretch"):
-            run_sql(
-                "UPDATE applications SET status = ?, priority = ?, next_action = ?, follow_up_date = ? WHERE id = ?",
-                (new_status, new_priority, new_action, new_follow.isoformat(), options[selected]),
-            )
-            st.success("Candidature mise a jour.")
-            st.rerun()
-
-
 def agenda_page() -> None:
-    page_intro("Agenda", "Un calendrier mensuel pour voir les deadlines, entretiens, tests, relances et evenements reseau.", "Planning")
-    events, apps, contacts = events_df(), applications_df(), contacts_df()
-    items = agenda_items(events, apps, contacts)
+    page_intro("Calendrier", "Un vrai calendrier mensuel pour ajouter et suivre les echeances, entretiens, relances et objectifs a venir.", "Planning")
+    events, contacts, goals = events_df(), contacts_df(), goals_df()
+    items = agenda_items(events, contacts, goals)
     if "agenda_month" not in st.session_state:
         st.session_state["agenda_month"] = date.today().replace(day=1)
     month_start = st.session_state["agenda_month"]
@@ -1644,7 +1199,7 @@ def agenda_page() -> None:
 
     section_label("Calendrier")
     if not items:
-        st.info("Aucun element date pour le moment. Ajoute un evenement, une candidature ou une relance reseau.")
+        st.info("Aucun element date pour le moment. Ajoute un evenement, une relance reseau ou une echeance d'objectif.")
     render_calendar(month_start, items)
 
     left, right = st.columns([1.1, .9])
@@ -1928,7 +1483,7 @@ def contacts_page() -> None:
 
 
 def resources_page() -> None:
-    page_intro("Ressources", "CV, lettres, guides, preparation entretien et liens utiles classes pour retrouver vite le bon support.", "Bibliotheque")
+    page_intro("Bibliotheque", "CV, lettres de motivation, preparations techniques, cours et documents Drive centralises sous forme de liens.", "Ressources externes")
     with st.expander("Ajouter une ressource", expanded=False):
         resource_form("main_resource")
 
@@ -1942,7 +1497,7 @@ def resources_page() -> None:
     if field != "Tous":
         filtered = filtered[filtered["field"] == field]
 
-    section_label("Ressources")
+    section_label("Documents et liens")
     cols = st.columns(3)
     for index, (_, row) in enumerate(filtered.iterrows()):
         with cols[index % 3]:
@@ -1951,92 +1506,84 @@ def resources_page() -> None:
 
 
 def goals_page() -> None:
-    page_intro("Objectifs", "Transformer une ambition vague en progression mesurable et prochaines etapes visibles.", "Progression")
-    with st.form("goal_form", clear_on_submit=True):
-        left, right = st.columns(2)
-        with left:
-            title = st.text_input("Objectif")
-            field = st.selectbox("Domaine", [""] + FIELDS)
-            due = st.date_input("Echeance", value=date.today() + timedelta(days=30))
-        with right:
-            progress = st.slider("Progression", 0, 100, 10)
-            status = st.selectbox("Statut", GOAL_STATUSES)
-            next_step = st.text_input("Prochaine etape")
-        notes = st.text_area("Notes")
-        submitted = st.form_submit_button("Ajouter l'objectif", width="stretch")
+    page_intro("Objectifs", "Une liste d'actions concretes pour suivre ce que tu dois faire, quand le faire, et ce qui avance vraiment.", "To-do")
+    goals = goals_df()
+    active_goals = goals[goals["status"] != "Termine"] if not goals.empty else goals
+    late_goals = active_goals[active_goals["days_left"].fillna(99) < 0] if not active_goals.empty else active_goals
+    high_goals = active_goals[active_goals["priority"] == "Haute"] if not active_goals.empty else active_goals
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        metric_card("A faire", len(active_goals), "objectifs ouverts")
+    with c2:
+        metric_card("Priorite haute", len(high_goals), "a traiter en premier")
+    with c3:
+        metric_card("En retard", len(late_goals), "echeances depassees")
+
+    with st.expander("Ajouter une action", expanded=goals.empty):
+        with st.form("goal_form", clear_on_submit=True):
+            left, right = st.columns(2)
+            with left:
+                title = st.text_input("Action / objectif")
+                due = st.date_input("Echeance", value=date.today() + timedelta(days=7))
+                priority = st.selectbox("Priorite", PRIORITIES)
+            with right:
+                field = st.selectbox("Domaine", [""] + FIELDS)
+                status = st.selectbox("Statut", GOAL_STATUSES)
+                next_step = st.text_input("Prochaine etape")
+            notes = st.text_area("Notes")
+            submitted = st.form_submit_button("Ajouter a ma to-do", width="stretch")
     if submitted:
         if not title:
-            st.error("Ajoute un objectif.")
+            st.error("Ajoute au minimum une action ou un objectif.")
             return
         run_sql(
-            "INSERT INTO goals (title, field, due_date, progress, status, next_step, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (title, field, due.isoformat(), progress, status, next_step, notes, datetime.utcnow().isoformat(timespec="seconds")),
+            "INSERT INTO goals (title, field, due_date, priority, progress, status, next_step, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (title, field, due.isoformat(), priority, 0 if status != "Termine" else 100, status, next_step, notes, datetime.utcnow().isoformat(timespec="seconds")),
         )
-        st.success("Objectif ajoute.")
+        st.success("Action ajoutee.")
         st.rerun()
 
-    goals = goals_df()
-    section_label("Objectifs actifs")
-    for _, row in goals.iterrows():
-        st.write(f"**{row['title']}**")
-        st.progress(int(row["progress"]) / 100)
-        st.caption(f"{row['status']} - {row['field'] or 'general'} - echeance {format_day(row['due_date'])} - {row['next_step'] or 'prochaine etape a definir'}")
+    if goals.empty:
+        st.info("Ajoute ta premiere action pour construire ton plan de travail.")
+        return
 
-    with st.expander("Mettre a jour une progression"):
+    section_label("Actions ouvertes")
+    for _, row in active_goals.iterrows():
+        hot = row["priority"] == "Haute" or (pd.notna(row["days_left"]) and row["days_left"] <= 3)
+        item_card(
+            row["title"],
+            row["next_step"] or row["notes"] or "Prochaine etape a definir.",
+            [row["priority"], row["status"], days_text(row["due_date"]), row["field"] or "General"],
+            hot=hot,
+        )
+        st.progress(max(0, min(100, int(row["progress"] or 0))) / 100)
+
+    done_goals = goals[goals["status"] == "Termine"]
+    if not done_goals.empty:
+        with st.expander("Actions terminees", expanded=False):
+            for _, row in done_goals.iterrows():
+                item_card(row["title"], row["notes"] or row["next_step"] or "", [format_day(row["due_date"]), row["field"] or "General"], hot=False)
+
+    with st.expander("Mettre a jour une action"):
         options = {f"{row['title']}": int(row["id"]) for _, row in goals.iterrows()}
         if options:
             selected = st.selectbox("Objectif", list(options))
-            new_progress = st.slider("Nouvelle progression", 0, 100, 50)
+            selected_row = goals[goals["id"] == options[selected]].iloc[0]
+            col1, col2, col3 = st.columns(3)
+            new_status = col1.selectbox("Statut", GOAL_STATUSES, index=GOAL_STATUSES.index(selected_row["status"]) if selected_row["status"] in GOAL_STATUSES else 0)
+            new_priority = col2.selectbox("Priorite", PRIORITIES, index=PRIORITIES.index(selected_row["priority"]) if selected_row["priority"] in PRIORITIES else 1)
+            new_due = col3.date_input("Echeance", value=parse_day(selected_row["due_date"]) or date.today())
+            new_progress = st.slider("Progression", 0, 100, int(selected_row["progress"] or 0))
             new_step = st.text_input("Nouvelle prochaine etape")
-            if st.button("Mettre a jour l'objectif", width="stretch"):
-                run_sql("UPDATE goals SET progress = ?, next_step = ? WHERE id = ?", (new_progress, new_step, options[selected]))
-                st.success("Objectif mis a jour.")
+            if st.button("Mettre a jour", width="stretch"):
+                final_progress = 100 if new_status == "Termine" else new_progress
+                run_sql(
+                    "UPDATE goals SET status = ?, priority = ?, due_date = ?, progress = ?, next_step = ? WHERE id = ?",
+                    (new_status, new_priority, new_due.isoformat(), final_progress, new_step, options[selected]),
+                )
+                st.success("Action mise a jour.")
                 st.rerun()
-
-
-def analytics_page() -> None:
-    page_intro("Analyse", "Comprendre ou l'effort produit le plus de traction et ou le pipeline se bloque.", "Pilotage")
-    apps, goals = applications_df(), goals_df()
-    active = apps[apps["status"] != "Cloturee"] if not apps.empty else apps
-    sent_base = active[active["status"] != "Entreprise cible"] if not active.empty else active
-    traction = int(active["status"].isin(["Tests", "Entretien", "Offre"]).sum()) if not active.empty else 0
-    offers = int((active["status"] == "Offre").sum()) if not active.empty else 0
-    overdue = int((active["days_to_follow"] < 0).sum()) if not active.empty else 0
-    c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        metric_card("Candidatures", len(active), "pipeline actif")
-    with c2:
-        metric_card("Traction", f"{traction / max(len(sent_base), 1):.0%}", "tests + entretiens + offres")
-    with c3:
-        metric_card("Offres", offers, "opportunites gagnees")
-    with c4:
-        metric_card("Relances en retard", overdue, "a traiter")
-
-    left, right = st.columns(2)
-    with left:
-        section_label("Par statut")
-        st.bar_chart(active["status"].value_counts().reindex(STATUSES, fill_value=0) if not active.empty else pd.Series(dtype=int))
-    with right:
-        section_label("Par domaine")
-        st.bar_chart(active["field"].value_counts() if not active.empty else pd.Series(dtype=int))
-    section_label("Objectifs")
-    st.bar_chart(goals.set_index("title")["progress"] if not goals.empty else pd.Series(dtype=int))
-
-
-def data_page() -> None:
-    page_intro("Donnees", "Exporter, verifier et reinitialiser les donnees de demonstration quand tu veux repartir proprement.", "Systeme")
-    tables = {"applications": applications_df(), "resources": resources_df(), "events": events_df(), "goals": goals_df(), "contacts": contacts_df()}
-    export = pd.concat([table.assign(table=name) for name, table in tables.items()], ignore_index=True, sort=False)
-    st.download_button("Telecharger toutes les donnees en CSV", export.to_csv(index=False).encode("utf-8"), f"my-finance-career-{date.today().isoformat()}.csv", "text/csv", width="stretch")
-    st.info("L'app est compatible Streamlit Cloud. La base SQLite locale est ignoree par GitHub pour eviter de publier tes donnees personnelles.")
-    if st.button("Recharger les donnees de demonstration", width="stretch"):
-        with closing(connect()) as conn:
-            for table in TABLES:
-                conn.execute(f"DELETE FROM {table}")
-            conn.commit()
-        seed_demo()
-        st.success("Donnees rechargees.")
-        st.rerun()
 
 
 def main() -> None:
@@ -2045,14 +1592,10 @@ def main() -> None:
     seed_demo()
     page = render_header()
     pages = {
-        "Accueil": home_page,
-        "Pipeline": pipeline_page,
-        "Agenda": agenda_page,
-        "Reseau": contacts_page,
-        "Ressources": resources_page,
         "Objectifs": goals_page,
-        "Analyse": analytics_page,
-        "Donnees": data_page,
+        "Calendrier": agenda_page,
+        "Bibliotheque": resources_page,
+        "Reseau": contacts_page,
     }
     pages[page]()
 

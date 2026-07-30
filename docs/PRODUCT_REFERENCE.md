@@ -2,19 +2,17 @@
 
 ## Positionnement
 
-My Finance Career est un espace de pilotage pour etudiants en finance. L'application centralise candidatures, ressources, echeances, objectifs et contacts sans remplacer LinkedIn, les plateformes d'emploi ou Google Drive.
+My Finance Career est un espace de pilotage pour etudiants en finance. L'application centralise objectifs, echeances, ressources externes et contacts sans remplacer LinkedIn, les plateformes d'emploi ou Google Drive.
 
 ## Perimetre livre
 
-- Tableau de bord en premiere page avec candidatures en cours, objectifs, to-do, rappels et statistiques.
-- Pipeline de candidatures avec focus list, filtres et mise a jour rapide.
-- Agenda en calendrier mensuel avec deadlines, entretiens, tests, relances de candidatures, rappels reseau et ajout d'evenements.
+- Navigation limitee aux quatre modules principaux: Objectifs, Calendrier, Bibliotheque et Reseau.
+- Objectifs sous forme de to-do avec priorite, echeance, statut, progression et prochaine etape.
+- Calendrier mensuel avec echeances, entretiens, tests, rappels reseau, objectifs et ajout d'evenements.
 - Reseau professionnel avec contacts classes par metier, suivi des relances, statut, canal et priorite.
 - Import Excel/CSV d'une fiche de networking existante vers la bibliotheque de contacts.
-- Bibliotheque de ressources par usage et domaine.
-- Objectifs avec progression modifiable.
-- Analyse du pipeline.
-- Export CSV.
+- Bibliotheque de ressources par usage et domaine, conservees sous forme de liens externes.
+- Logo affiche comme symbole fondu dans le fond, sans bloc noir derriere.
 
 ## Choix MVP
 
