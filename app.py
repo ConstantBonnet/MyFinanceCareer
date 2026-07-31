@@ -17,7 +17,7 @@ import streamlit as st
 
 APP_TITLE = "My Finance Career"
 DB_PATH = Path("mfc_data.sqlite3")
-LOGO_PATH = Path("static/logo_mark.png")
+LOGO_PATH = Path("static/logo.png")
 
 FIELDS = [
     "Investment Banking",
@@ -517,7 +517,7 @@ def setup_page() -> None:
         }
         .appbar-brand img {
             width: 60px;
-            height: 36px;
+            height: 60px;
             object-fit: contain;
             border-radius: 0;
             background: transparent;
@@ -1038,7 +1038,7 @@ def setup_page() -> None:
             }
             .appbar-brand img {
                 width: 48px;
-                height: 30px;
+                height: 48px;
             }
             .appbar-title {
                 font-size: .92rem;
@@ -1092,7 +1092,7 @@ def setup_page() -> None:
             }
             .appbar-brand img {
                 width: 44px;
-                height: 28px;
+                height: 44px;
             }
             .appbar-title {
                 display: none;
@@ -1129,8 +1129,8 @@ def setup_page() -> None:
             min-width: 220px;
         }
         .appbar-brand img {
-            width: 72px;
-            height: 42px;
+            width: 58px;
+            height: 58px;
         }
         .appbar-title {
             font-size: 1.08rem;

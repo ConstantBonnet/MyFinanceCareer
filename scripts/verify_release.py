@@ -77,8 +77,9 @@ def main() -> None:
             check(profession_count >= 2, "network demo contacts are classified by profession")
 
     check(app.PAGES == REQUIRED_PAGES, "navigation includes the home dashboard and core pages")
-    check(app.LOGO_PATH.name == "logo_mark.png", "transparent logo mark is used in the header")
+    check(app.LOGO_PATH.name == "logo.png", "provided square logo is used in the header")
     app_source = read("app.py")
+    check("object-fit: contain" in app_source and "object-fit: cover" not in app_source, "header logo is displayed without cropping")
     check('st.selectbox("Menu"' not in app_source, "dropdown navigation is removed from the header")
     check("sync_page_nav" not in app_source, "old dropdown navigation callback is removed")
     check("topnav-links" in app_source and "nav-pill" in app_source, "header navigation uses direct horizontal links")
